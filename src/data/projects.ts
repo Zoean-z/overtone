@@ -4,7 +4,10 @@ export type Project = {
 	description: string;
 	stack: string[];
 	github: string;
+	demo?: string;
 	status: string;
+	mark: string;
+	accent: string;
 };
 
 export const projects: Project[] = [
@@ -16,15 +19,43 @@ export const projects: Project[] = [
 		stack: ["产品设计", "应用结构", "音乐体验"],
 		github: "https://github.com/Zoean-z/Innocence",
 		status: "音乐日记 App",
+		mark: "IN",
+		accent: "from-[oklch(0.34_0.08_330)] via-[oklch(0.26_0.04_265)] to-[oklch(0.18_0.02_250)]",
 	},
 	{
 		title: "ResearchAgent",
 		tagline: "一个有自主节奏的论文研究 Agent。",
 		description:
-			"模型会自己判断什么时候检索、什么时候读原文、什么时候回看长期记忆，而不是沿着固定的检索脚本机械执行。",
+			"模型会自己判断什么时候检索、什么时候读原文、什么时候回看长期记忆，而不是沿着固定脚本机械执行。",
 		stack: ["LLM Agent", "检索", "长期记忆"],
 		github: "https://github.com/Zoean-z/ResearchAgent",
+		demo: "https://zoean-z.github.io/ResearchAgent/",
 		status: "自主研究工作流",
+		mark: "RA",
+		accent: "from-[oklch(0.31_0.07_230)] via-[oklch(0.22_0.04_235)] to-[oklch(0.16_0.02_240)]",
+	},
+	{
+		title: "zhiyuan",
+		tagline: "一个 Java 后端结合 Agent 能力的项目实践。",
+		description:
+			"以 Java 后端能力为基础，把业务接口、数据流转和智能体工作流结合起来，强调真实系统里的协作关系。",
+		stack: ["Java", "Spring Boot", "Agent"],
+		github: "https://github.com/Zoean-z/zhiyuan",
+		status: "Java 后端 + Agent",
+		mark: "ZY",
+		accent: "from-[oklch(0.33_0.09_170)] via-[oklch(0.24_0.05_195)] to-[oklch(0.16_0.02_215)]",
+	},
+	{
+		title: "sword-",
+		tagline: "一个节奏很轻快的 JavaScript 肉鸽小游戏。",
+		description:
+			"偏实验性的网页游戏项目，重点在于玩法循环、即时反馈和轻量但完整的在线可玩体验。",
+		stack: ["JavaScript", "游戏循环", "Roguelike"],
+		github: "https://github.com/Zoean-z/sword-",
+		demo: "https://zoean-z.github.io/sword-/",
+		status: "在线肉鸽小游戏",
+		mark: "SW",
+		accent: "from-[oklch(0.38_0.10_60)] via-[oklch(0.25_0.05_30)] to-[oklch(0.15_0.02_20)]",
 	},
 	{
 		title: "couple-Qwen-0.8b",
@@ -34,5 +65,7 @@ export const projects: Project[] = [
 		stack: ["模型微调", "中文 NLP", "效果评估"],
 		github: "https://github.com/Zoean-z/couple-Qwen-0.8b",
 		status: "中文生成实验",
+		mark: "QW",
+		accent: "from-[oklch(0.34_0.08_25)] via-[oklch(0.24_0.04_10)] to-[oklch(0.15_0.02_355)]",
 	},
 ];

@@ -1,64 +1,97 @@
 ---
 import { Icon } from "astro-icon/components";
-import { projects } from "../data/projects";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+import { projects } from "../data/projects";
 ---
 <MainGridLayout title="项目" description="Zoean 的项目展示">
 	<div class="transition flex flex-col rounded-[var(--radius-large)] bg-[var(--card-bg)] py-1 md:py-0 md:bg-transparent md:gap-4 mb-4">
 		{projects.map((project, index) => (
 			<article
-				class="card-base flex flex-col w-full rounded-[var(--radius-large)] overflow-hidden relative onload-animation"
+				class="card-base flex flex-col-reverse md:flex-col w-full rounded-[var(--radius-large)] overflow-hidden relative onload-animation"
 				style={`animation-delay: calc(var(--content-delay) + ${index * 60}ms);`}
 			>
-				<div class="pl-6 md:pl-9 pr-6 md:pr-24 pt-6 md:pt-7 pb-6 relative">
+				<div class="pl-6 md:pl-9 pr-6 md:pr-2 pt-6 md:pt-7 pb-6 relative w-full md:w-[calc(100%_-_28%_-_12px)]">
 					<div class="text-xs uppercase tracking-[0.22em] text-black/35 dark:text-white/28 mb-3">
 						{project.status}
 					</div>
-					<h2 class="font-bold mb-3 text-3xl text-90">
+
+					<div class="font-bold mb-3 text-3xl text-90">
 						{project.title}
-					</h2>
-					<p class="transition text-lg text-75 mb-4 pr-4">
+					</div>
+
+					<div class="transition text-75 mb-4 pr-4 text-lg">
 						{project.tagline}
-					</p>
-					<p class="transition text-75 mb-5 pr-4 leading-8 max-w-[46rem]">
+					</div>
+
+					<div class="transition text-75 mb-4 pr-4 leading-8">
 						{project.description}
-					</p>
-					<div class="flex flex-wrap gap-2 pr-2 md:pr-0">
+					</div>
+
+					<div class="flex flex-wrap gap-2 mb-5">
 						{project.stack.map((item) => (
 							<span class="btn-regular rounded-lg px-3 h-9 text-sm">
 								{item}
 							</span>
 						))}
 					</div>
+
+					<div class="text-sm text-black/30 dark:text-white/30 flex flex-wrap gap-4 transition">
+						<a
+							href={project.github}
+							target="_blank"
+							rel="noreferrer"
+							class="link"
+						>
+							GitHub
+						</a>
+						{project.demo && (
+							<>
+								<div>|</div>
+								<a
+									href={project.demo}
+									target="_blank"
+									rel="noreferrer"
+									class="link"
+								>
+									在线演示
+								</a>
+							</>
+						)}
+					</div>
 				</div>
 
 				<a
-					href={project.github}
+					href={project.demo || project.github}
 					target="_blank"
 					rel="noreferrer"
-					aria-label={`查看 ${project.title} 仓库`}
-					class="hidden md:flex btn-regular w-[3.25rem] absolute right-3 top-3 bottom-3 rounded-xl bg-[var(--enter-btn-bg)] hover:bg-[var(--enter-btn-bg-hover)] active:bg-[var(--enter-btn-bg-active)] active:scale-95"
+					aria-label={`查看 ${project.title}`}
+					class:list={[
+						"group",
+						"max-h-[22vh] md:max-h-none mx-4 mt-4 -mb-2 md:mb-0 md:mx-0 md:mt-0",
+						"md:w-[28%] relative md:absolute md:top-3 md:bottom-3 md:right-3 rounded-xl overflow-hidden active:scale-95",
+						`bg-gradient-to-br ${project.accent}`,
+					]}
 				>
-					<Icon
-						name="material-symbols:chevron-right-rounded"
-						class="transition text-[var(--primary)] text-4xl mx-auto"
-					></Icon>
-				</a>
-
-				<div class="md:hidden px-4 pb-4">
-					<a
-						href={project.github}
-						target="_blank"
-						rel="noreferrer"
-						class="btn-regular rounded-xl h-11 px-4 font-semibold active:scale-95 inline-flex items-center gap-2"
-					>
-						查看仓库
+					<div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.25),transparent_38%)]"></div>
+					<div class="absolute inset-0 bg-[linear-gradient(160deg,rgba(255,255,255,0.08),transparent_45%)]"></div>
+					<div class="absolute pointer-events-none z-10 w-full h-full group-hover:bg-black/18 group-active:bg-black/28 transition"></div>
+					<div class="absolute pointer-events-none z-20 w-full h-full flex items-center justify-center">
+						<div class="text-center">
+							<div class="text-white/90 font-bold text-4xl md:text-5xl tracking-[0.12em]">
+								{project.mark}
+							</div>
+							<div class="text-white/55 text-xs uppercase tracking-[0.28em] mt-3">
+								{project.demo ? "Demo / Repo" : "Repository"}
+							</div>
+						</div>
+					</div>
+					<div class="absolute right-4 bottom-4 z-20">
 						<Icon
 							name="material-symbols:chevron-right-rounded"
-							class="text-2xl"
+							class="transition opacity-80 group-hover:opacity-100 text-white text-5xl"
 						></Icon>
-					</a>
-				</div>
+					</div>
+				</a>
 			</article>
 		))}
 	</div>

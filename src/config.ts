@@ -5,35 +5,29 @@ import type {
 	ProfileConfig,
 	SiteConfig,
 } from "./types/config";
+import siteSettings from "./data/site-settings.json";
 import { LinkPreset } from "./types/config";
 
+const settings = siteSettings as {
+	title: string;
+	subtitle: string;
+	lang: SiteConfig["lang"];
+	themeColor: SiteConfig["themeColor"];
+	banner: SiteConfig["banner"];
+	toc: SiteConfig["toc"];
+	favicon: SiteConfig["favicon"];
+	profile: ProfileConfig;
+	license: LicenseConfig;
+};
+
 export const siteConfig: SiteConfig = {
-	title: "overtone.zoean",
-	subtitle: "你听见的，不止于此。",
-	lang: "zh_CN",
-	themeColor: {
-		hue: 205,
-		fixed: false,
-	},
-	banner: {
-		enable: true,
-		src: "/brand/banner.png",
-		position: "top",
-		credit: {
-			enable: false,
-			text: "",
-			url: "",
-		},
-	},
-	toc: {
-		enable: true,
-		depth: 2,
-	},
-	favicon: [
-		{
-			src: "/brand/overtone-favicon.svg",
-		},
-	],
+	title: settings.title,
+	subtitle: settings.subtitle,
+	lang: settings.lang,
+	themeColor: settings.themeColor,
+	banner: settings.banner,
+	toc: settings.toc,
+	favicon: settings.favicon,
 };
 
 export const navBarConfig: NavBarConfig = {
@@ -53,34 +47,9 @@ export const navBarConfig: NavBarConfig = {
 	],
 };
 
-export const profileConfig: ProfileConfig = {
-	avatar: "/brand/avatar.png",
-	name: "Zoean",
-	bio: "在音乐、研究工作流和有表达力的软件之间寻找更深一层的结构。",
-	links: [
-		{
-			name: "GitHub",
-			icon: "fa6-brands:github",
-			url: "https://github.com/Zoean-z",
-		},
-		{
-			name: "Innocence",
-			icon: "fa6-solid:music",
-			url: "https://github.com/Zoean-z/Innocence",
-		},
-		{
-			name: "ResearchAgent",
-			icon: "fa6-solid:book-open-reader",
-			url: "https://github.com/Zoean-z/ResearchAgent",
-		},
-	],
-};
+export const profileConfig: ProfileConfig = settings.profile;
 
-export const licenseConfig: LicenseConfig = {
-	enable: true,
-	name: "CC BY-NC-SA 4.0",
-	url: "https://creativecommons.org/licenses/by-nc-sa/4.0/",
-};
+export const licenseConfig: LicenseConfig = settings.license;
 
 export const expressiveCodeConfig: ExpressiveCodeConfig = {
 	theme: "github-dark",

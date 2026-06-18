@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>overtone admin</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="eyebrow">Local admin</div>
+          <h1>overtone.zoean</h1>
+          <p>本地内容后台。改文件，检查，提交，推送。</p>
+        </div>
+        <nav class="nav">
+          <button class="nav-btn active" data-tab="settings">站点设置</button>
+          <button class="nav-btn" data-tab="posts">文章</button>
+          <button class="nav-btn" data-tab="projects">项目</button>
+          <button class="nav-btn" data-tab="publish">发布</button>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <section class="panel active" data-panel="settings">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">Site</div>
+              <h2>站点设置</h2>
+            </div>
+            <button id="save-settings" class="primary">保存设置</button>
+          </div>
+
+          <div class="grid two">
+            <label>
+              <span>网站标题</span>
+              <input id="site-title" type="text" />
+            </label>
+            <label>
+              <span>副标题</span>
+              <input id="site-subtitle" type="text" />
+            </label>
+            <label>
+              <span>名字</span>
+              <input id="profile-name" type="text" />
+            </label>
+            <label>
+              <span>主题色 Hue</span>
+              <input id="theme-hue" type="number" min="0" max="360" />
+            </label>
+          </div>
+
+          <label class="stacked">
+            <span>简介</span>
+            <textarea id="profile-bio" rows="3"></textarea>
+          </label>
+
+          <div class="grid two media-grid">
+            <div class="media-card">
+              <div class="media-head">
+                <div>
+                  <div class="eyebrow">Avatar</div>
+                  <h3>头像</h3>
+                </div>
+                <input id="avatar-upload" type="file" accept="image/*" />
+              </div>
+              <img id="avatar-preview" alt="avatar preview" />
+            </div>
+
+            <div class="media-card">
+              <div class="media-head">
+                <div>
+                  <div class="eyebrow">Banner</div>
+                  <h3>头图</h3>
+                </div>
+                <input id="banner-upload" type="file" accept="image/*" />
+              </div>
+              <img id="banner-preview" alt="banner preview" />
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="posts">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">Posts</div>
+              <h2>文章</h2>
+            </div>
+            <div class="actions">
+              <button id="new-post" class="ghost">新建文章</button>
+              <button id="save-post" class="primary">保存文章</button>
+              <button id="delete-post" class="danger">删除文章</button>
+            </div>
+          </div>
+
+          <div class="editor-layout">
+            <div class="list-column">
+              <div id="post-list" class="list"></div>
+            </div>
+            <div class="editor-column">
+              <div class="grid two">
+                <label>
+                  <span>标题</span>
+                  <input id="post-title" type="text" />
+                </label>
+                <label>
+                  <span>Slug</span>
+                  <input id="post-slug" type="text" />
+                </label>
+                <label>
+                  <span>发布日期</span>
+                  <input id="post-published" type="date" />
+                </label>
+                <label>
+                  <span>分类</span>
+                  <input id="post-category" type="text" />
+                </label>
+                <label>
+                  <span>标签</span>
+                  <input id="post-tags" type="text" placeholder="用逗号分隔" />
+                </label>
+                <label class="inline-check">
+                  <span>草稿</span>
+                  <input id="post-draft" type="checkbox" />
+                </label>
+              </div>
+
+              <label class="stacked">
+                <span>摘要</span>
+                <textarea id="post-description" rows="2"></textarea>
+              </label>
+
+              <div class="cover-row">
+                <div class="cover-preview-wrap">
+                  <img id="post-cover-preview" alt="post cover preview" />
+                </div>
+                <div class="cover-controls">
+                  <label class="stacked">
+                    <span>封面路径</span>
+                    <input id="post-image" type="text" />
+                  </label>
+                  <input id="post-cover-upload" type="file" accept="image/*" />
+                </div>
+              </div>
+
+              <label class="stacked">
+                <span>正文</span>
+                <textarea id="post-body" rows="18"></textarea>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="projects">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">Projects</div>
+              <h2>项目</h2>
+            </div>
+            <div class="actions">
+              <button id="add-project" class="ghost">新增项目</button>
+              <button id="save-projects" class="primary">保存项目</button>
+            </div>
+          </div>
+          <div id="project-list" class="project-list"></div>
+        </section>
+
+        <section class="panel" data-panel="publish">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">Publish</div>
+              <h2>检查与发布</h2>
+            </div>
+          </div>
+          <div class="publish-row">
+            <input id="publish-message" type="text" value="Update site content" />
+            <button id="validate-site" class="ghost">本地检查</button>
+            <button id="publish-site" class="primary">提交并推送</button>
+          </div>
+          <pre id="publish-output" class="terminal"></pre>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

@@ -5,41 +5,34 @@ export type Project = {
 	stack: string[];
 	github: string;
 	status: string;
-	accent: string;
 };
 
 export const projects: Project[] = [
 	{
 		title: "Innocence",
-		tagline: "A music diary app for keeping sound tied to memory.",
+		tagline: "一个把声音和记忆绑在一起的音乐日记 App。",
 		description:
-			"A personal journaling app shaped around songs, moods, and fragments of daily life instead of plain text entries alone.",
-		stack: ["Product Design", "App Architecture", "Music UX"],
+			"它不是把歌曲当成播放器里的列表，而是把歌、情绪和日常片段一起组织成可回看的个人记录。",
+		stack: ["产品设计", "应用结构", "音乐体验"],
 		github: "https://github.com/Zoean-z/Innocence",
-		status: "Music diary app",
-		accent:
-			"from-[oklch(0.83_0.09_205)] via-[oklch(0.89_0.03_205)] to-transparent",
+		status: "音乐日记 App",
 	},
 	{
 		title: "ResearchAgent",
-		tagline: "An autonomous paper research agent with its own retrieval rhythm.",
+		tagline: "一个有自主节奏的论文研究 Agent。",
 		description:
-			"The model decides when to search, when to open the original paper, and when to consult long-term memory instead of following a rigid retrieval script.",
-		stack: ["LLM Agents", "Retrieval", "Persistent Memory"],
+			"模型会自己判断什么时候检索、什么时候读原文、什么时候回看长期记忆，而不是沿着固定的检索脚本机械执行。",
+		stack: ["LLM Agent", "检索", "长期记忆"],
 		github: "https://github.com/Zoean-z/ResearchAgent",
-		status: "Autonomous research workflow",
-		accent:
-			"from-[oklch(0.77_0.11_225)] via-[oklch(0.89_0.03_205)] to-transparent",
+		status: "自主研究工作流",
 	},
 	{
 		title: "couple-Qwen-0.8b",
-		tagline: "A fine-tuned Qwen 0.8B model for stronger Chinese couplet generation.",
+		tagline: "一个面向中文对联生成的千问 0.8B 微调实验。",
 		description:
-			"A focused model adaptation project aimed at improving poetic structure, parallelism, and output quality in couplet generation.",
-		stack: ["Fine-tuning", "Chinese NLP", "Evaluation"],
+			"目标是提升对联输出里的工整度、对仗关系和整体可读性，让小模型在窄任务上拿到更稳定的表现。",
+		stack: ["模型微调", "中文 NLP", "效果评估"],
 		github: "https://github.com/Zoean-z/couple-Qwen-0.8b",
-		status: "Model adaptation",
-		accent:
-			"from-[oklch(0.8_0.1_190)] via-[oklch(0.89_0.03_205)] to-transparent",
+		status: "中文生成实验",
 	},
 ];

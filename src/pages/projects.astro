@@ -7,7 +7,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 	<div class="transition flex flex-col rounded-[var(--radius-large)] bg-[var(--card-bg)] py-1 md:py-0 md:bg-transparent md:gap-4 mb-4">
 		{projects.map((project, index) => (
 			<article
-				class="card-base flex flex-col-reverse md:flex-col w-full rounded-[var(--radius-large)] overflow-hidden relative onload-animation"
+				class="card-base flex flex-col w-full rounded-[var(--radius-large)] overflow-hidden relative onload-animation"
 				style={`animation-delay: calc(var(--content-delay) + ${index * 60}ms);`}
 			>
 				<div class="pl-6 md:pl-9 pr-6 md:pr-24 pt-6 md:pt-7 pb-6 relative">
@@ -23,7 +23,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 					<p class="transition text-75 mb-5 pr-4 leading-8 max-w-[46rem]">
 						{project.description}
 					</p>
-					<div class="flex flex-wrap gap-2">
+					<div class="flex flex-wrap gap-2 pr-2 md:pr-0">
 						{project.stack.map((item) => (
 							<span class="btn-regular rounded-lg px-3 h-9 text-sm">
 								{item}
@@ -37,7 +37,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 					target="_blank"
 					rel="noreferrer"
 					aria-label={`查看 ${project.title} 仓库`}
-					class="!hidden md:!flex btn-regular w-[3.25rem] absolute right-3 top-3 bottom-3 rounded-xl bg-[var(--enter-btn-bg)] hover:bg-[var(--enter-btn-bg-hover)] active:bg-[var(--enter-btn-bg-active)] active:scale-95"
+					class="hidden md:flex btn-regular w-[3.25rem] absolute right-3 top-3 bottom-3 rounded-xl bg-[var(--enter-btn-bg)] hover:bg-[var(--enter-btn-bg-hover)] active:bg-[var(--enter-btn-bg-active)] active:scale-95"
 				>
 					<Icon
 						name="material-symbols:chevron-right-rounded"
@@ -45,18 +45,20 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 					></Icon>
 				</a>
 
-				<a
-					href={project.github}
-					target="_blank"
-					rel="noreferrer"
-					class="md:hidden btn-regular rounded-xl mx-4 mt-4 -mb-2 h-14 px-5 font-semibold active:scale-95 flex items-center justify-between"
-				>
-					<span>查看仓库</span>
-					<Icon
-						name="material-symbols:chevron-right-rounded"
-						class="text-3xl"
-					></Icon>
-				</a>
+				<div class="md:hidden px-4 pb-4">
+					<a
+						href={project.github}
+						target="_blank"
+						rel="noreferrer"
+						class="btn-regular rounded-xl h-11 px-4 font-semibold active:scale-95 inline-flex items-center gap-2"
+					>
+						查看仓库
+						<Icon
+							name="material-symbols:chevron-right-rounded"
+							class="text-2xl"
+						></Icon>
+					</a>
+				</div>
 			</article>
 		))}
 	</div>

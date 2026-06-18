@@ -1,7 +1,5 @@
 ---
 import type { GetStaticPaths } from "astro";
-import FeaturedProjects from "../components/home/FeaturedProjects.astro";
-import HeroIntro from "../components/home/HeroIntro.astro";
 import Pagination from "../components/control/Pagination.astro";
 import PostPage from "../components/PostPage.astro";
 import { PAGE_SIZE } from "../constants/constants";
@@ -20,8 +18,6 @@ const len = page.data.length;
 ---
 
 <MainGridLayout>
-    {page.currentPage === 1 && <HeroIntro />}
-    {page.currentPage === 1 && <FeaturedProjects />}
     <PostPage page={page}></PostPage>
     <Pagination class="mx-auto onload-animation" page={page} style={`animation-delay: calc(var(--content-delay) + ${(len)*50}ms)`}></Pagination>
 </MainGridLayout>

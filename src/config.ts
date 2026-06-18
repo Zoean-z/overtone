@@ -9,19 +9,19 @@ import { LinkPreset } from "./types/config";
 
 export const siteConfig: SiteConfig = {
 	title: "overtone.zoean",
-	subtitle: "what you hear is not all there is.",
-	lang: "en", // Language code, e.g. 'en', 'zh_CN', 'ja', etc.
+	subtitle: "你听见的，不止于此。",
+	lang: "zh_CN", // Language code, e.g. 'en', 'zh_CN', 'ja', etc.
 	themeColor: {
 		hue: 205, // cool blue with enough range to feel layered rather than loud
-		fixed: true, // Keep the site's color treatment intentional
+		fixed: false, // Allow visitors to tune the accent color
 	},
 	banner: {
-		enable: false,
+		enable: true,
 		src: "assets/images/demo-banner.png", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
 		position: "center", // Equivalent to object-position, only supports 'top', 'center', 'bottom'. 'center' by default
 		credit: {
 			enable: false, // Display the credit text of the banner image
-			text: "", // Credit text to be displayed
+			text: "临时横幅图", // Credit text to be displayed
 			url: "", // (Optional) URL link to the original artwork or artist's page
 		},
 	},
@@ -40,7 +40,7 @@ export const navBarConfig: NavBarConfig = {
 	links: [
 		LinkPreset.Home,
 		{
-			name: "Projects",
+			name: "项目",
 			url: "/projects/",
 		},
 		LinkPreset.Archive,
@@ -56,7 +56,7 @@ export const navBarConfig: NavBarConfig = {
 export const profileConfig: ProfileConfig = {
 	avatar: "/brand/overtone-avatar.svg", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
 	name: "Zoean",
-	bio: "Music-minded builder exploring agents, research workflows, and expressive software.",
+	bio: "在音乐、研究工作流和有表达力的软件之间寻找更深一层的结构。",
 	links: [
 		{
 			name: "GitHub",
@@ -77,7 +77,7 @@ export const profileConfig: ProfileConfig = {
 };
 
 export const licenseConfig: LicenseConfig = {
-	enable: false,
+	enable: true,
 	name: "CC BY-NC-SA 4.0",
 	url: "https://creativecommons.org/licenses/by-nc-sa/4.0/",
 };

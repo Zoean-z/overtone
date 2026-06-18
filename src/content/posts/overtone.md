@@ -1,18 +1,20 @@
 ---
 title: Overtone
 published: 2026-06-18
-description: A short note on why this site is named overtone.zoean.
-tags: [Site, Notes, Music]
-category: Notes
+description: 一个关于 overtone.zoean 这个名字为什么存在的简短说明。
+tags: [网站, 随笔, 音乐]
+category: 随笔
 draft: false
 ---
 
-`overtone.zoean` starts from a music idea.
+`overtone.zoean` 这个名字，起点是一个音乐里的概念。
 
-When you hear a note on a guitar, you are not only hearing the main pitch. There are quieter frequencies stacked above it, shaping the texture even when they stay in the background. That felt like a useful metaphor for how I want to build and write:
+当你听到一把吉他的一个音时，你听到的不只是主音本身。它上面还叠着一些更轻、更不显眼的频率，它们不一定最先被察觉，但会共同决定你真正听见的质感。
 
-- look past the first visible layer
-- keep attention on the structure underneath
-- let small systems carry more meaning than they show at first glance
+我想把这种感觉借来理解自己想做的产品和写的东西：
 
-This site will hold project notes, technical writing, and thoughts that sit somewhere between music, software, and research behavior.
+- 不停在第一层表象之外再多看一点
+- 对底下那层结构保持兴趣
+- 让小系统承载比表面看起来更多的意义
+
+这个网站之后会放项目记录、技术写作，以及一些落在音乐、软件和研究行为之间的想法。

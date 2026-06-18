@@ -1,21 +1,21 @@
 # About
 
-`overtone.zoean` is a personal site built around a simple idea: the first answer is rarely the whole signal.
+`overtone.zoean` 是一个围绕“第一层答案通常不是全部”这个想法建立起来的个人网站。
 
-In music, an overtone is one of the frequencies layered above the fundamental note. You do not always notice it first, but it changes the texture of what you hear. I like that as a way of thinking about software too: useful systems often come from looking under the obvious surface, then deciding what hidden layer actually matters.
+在音乐里，泛音是叠在主音之上的那些频率。你未必会先注意到它，但它会改变你最终听见的质感。我很喜欢把这个概念借到软件里去理解问题：真正有意思、也真正有用的系统，往往来自于继续往下看一层，找到表面之下真正起作用的结构。
 
-## What I build
+## 我在做什么
 
-- small products with a strong point of view
-- agent workflows that decide instead of only following scripts
-- tools where memory, retrieval, and interaction design all matter
+- 有明确观点的小产品
+- 不只是照流程执行，而是会自己做判断的 Agent 工作流
+- 把记忆、检索和交互体验一起考虑进去的工具
 
-## Current projects
+## 现在的项目
 
-- **Innocence**: a music diary app that treats songs as part of memory, not just playback
-- **ResearchAgent**: an autonomous paper research agent that decides when to search, when to read the source paper, and when to consult long-term memory
-- **couple-Qwen-0.8b**: a fine-tuned Qwen 0.8B experiment aimed at improving Chinese couplet generation
+- **Innocence**：一个音乐日记 App，把歌曲当成记忆的一部分，而不只是播放器里的内容
+- **ResearchAgent**：一个自主决策的论文研究 Agent，会自己判断什么时候检索、什么时候读原文、什么时候查长期记忆
+- **couple-Qwen-0.8b**：一个针对千问 0.8B 的微调实验，目标是提升中文对联生成质量
 
-## This site
+## 这个网站
 
-This space is for project notes, technical writing, and anything that sits between music, thought, and software structure.
+这里会放项目记录、技术文章，以及一些介于音乐、思考方式和软件结构之间的东西。

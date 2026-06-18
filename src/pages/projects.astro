@@ -1,0 +1,63 @@
+---
+import { Icon } from "astro-icon/components";
+import { projects } from "../data/projects";
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+---
+<MainGridLayout title="Projects" description="Selected projects by Zoean">
+	<section class="card-base overflow-hidden relative mb-4">
+		<div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,oklch(0.92_0.04_205)_0,transparent_42%)] dark:bg-[radial-gradient(circle_at_top_left,oklch(0.32_0.05_205)_0,transparent_44%)]"></div>
+		<div class="relative px-6 py-8 md:px-10 md:py-10">
+			<div class="text-[0.72rem] uppercase tracking-[0.24em] text-black/38 dark:text-white/35 mb-2">
+				Projects
+			</div>
+			<h1 class="text-3xl md:text-5xl font-bold tracking-[-0.04em] text-black/90 dark:text-white/92 max-w-[11ch]">
+				Work shaped by systems, memory, and sound.
+			</h1>
+			<p class="text-base md:text-lg text-black/68 dark:text-white/68 max-w-[38rem] mt-4 leading-8">
+				These projects sit between product instinct and technical structure: a music diary, an autonomous research workflow, and a focused model fine-tuning experiment.
+			</p>
+		</div>
+	</section>
+
+	<div class="grid gap-4">
+		{projects.map((project) => (
+			<article class="card-base overflow-hidden relative">
+				<div class={`absolute inset-0 bg-gradient-to-br ${project.accent} opacity-55 dark:opacity-30`}></div>
+				<div class="relative px-6 py-6 md:px-8 md:py-8">
+					<div class="flex flex-col gap-6 md:flex-row md:justify-between md:items-start">
+						<div class="max-w-[44rem]">
+							<div class="text-xs uppercase tracking-[0.22em] text-black/42 dark:text-white/38 mb-2">
+								{project.status}
+							</div>
+							<h2 class="text-2xl md:text-4xl font-bold tracking-[-0.03em] text-black/90 dark:text-white/92">
+								{project.title}
+							</h2>
+							<p class="text-lg text-black/72 dark:text-white/72 mt-2">
+								{project.tagline}
+							</p>
+							<p class="text-sm md:text-[0.98rem] leading-8 text-black/58 dark:text-white/58 mt-4">
+								{project.description}
+							</p>
+						</div>
+						<a
+							href={project.github}
+							target="_blank"
+							rel="noreferrer"
+							class="btn-regular rounded-full h-11 px-5 font-semibold inline-flex gap-2 active:scale-95"
+						>
+							Open repository
+							<Icon name="fa6-solid:arrow-up-right-from-square" class="text-sm" />
+						</a>
+					</div>
+					<div class="mt-6 flex flex-wrap gap-2">
+						{project.stack.map((item) => (
+							<span class="rounded-full bg-white/70 dark:bg-white/5 border border-black/8 dark:border-white/8 px-3 py-1.5 text-xs md:text-sm text-black/62 dark:text-white/58">
+								{item}
+							</span>
+						))}
+					</div>
+				</div>
+			</article>
+		))}
+	</div>
+</MainGridLayout>

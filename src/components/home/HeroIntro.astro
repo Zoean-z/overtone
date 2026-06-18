@@ -1,0 +1,59 @@
+---
+import { profileConfig, siteConfig } from "../../config";
+
+const overtoneLabel = "Overtone";
+---
+<section class="card-base overflow-hidden relative mb-4 md:mb-6">
+	<div class="absolute inset-0 opacity-70 dark:opacity-100">
+		<div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,oklch(0.92_0.04_205)_0,transparent_38%)] dark:bg-[radial-gradient(circle_at_top_left,oklch(0.34_0.05_205)_0,transparent_42%)]"></div>
+		<div class="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,transparent_42%,rgba(255,255,255,0.55)_42.5%,transparent_43%,transparent_100%)] dark:bg-[linear-gradient(135deg,transparent_0%,transparent_44%,rgba(255,255,255,0.04)_44.5%,transparent_45%,transparent_100%)]"></div>
+	</div>
+	<div class="relative px-6 py-8 md:px-10 md:py-12">
+		<div class="text-[0.72rem] md:text-xs uppercase tracking-[0.28em] text-black/40 dark:text-white/35 mb-4">
+			Personal site and notebook
+		</div>
+		<div class="grid gap-8 md:grid-cols-[minmax(0,1.5fr)_minmax(18rem,0.85fr)] md:items-end">
+			<div>
+				<div class="text-sm md:text-base text-black/45 dark:text-white/40 mb-3">
+					{overtoneLabel}
+				</div>
+				<h1 class="text-4xl md:text-6xl font-bold leading-[0.95] tracking-[-0.04em] text-black/90 dark:text-white/92 max-w-[10ch]">
+					{siteConfig.title}
+				</h1>
+				<p class="text-lg md:text-2xl leading-snug text-black/72 dark:text-white/72 max-w-[26rem] mt-5">
+					{siteConfig.subtitle}
+				</p>
+			</div>
+			<div class="border-t border-black/10 dark:border-white/10 pt-5 md:pt-6">
+				<p class="text-sm leading-7 text-black/68 dark:text-white/64 max-w-[28rem]">
+					Guitar harmonics stack quiet frequencies above the note you think you hear first. This site uses that idea as a working method:
+					products, agents, and writing that keep looking for the layers under the obvious answer.
+				</p>
+				<div class="mt-5 flex flex-wrap gap-3">
+					<a href="/projects/" class="btn-regular rounded-full h-11 px-5 font-semibold active:scale-95">
+						View projects
+					</a>
+					<a href="/about/" class="btn-plain rounded-full h-11 px-5 font-semibold active:scale-95">
+						About Zoean
+					</a>
+				</div>
+				<div class="mt-6 text-sm text-black/45 dark:text-white/40">
+					Currently linking music, research, and model behavior through small software systems.
+				</div>
+			</div>
+		</div>
+		<div class="mt-8 md:mt-10 flex flex-wrap gap-3 text-xs md:text-sm text-black/50 dark:text-white/45">
+			<div class="rounded-full border border-black/10 dark:border-white/10 px-3 py-1.5">Zoean</div>
+			<div class="rounded-full border border-black/10 dark:border-white/10 px-3 py-1.5">Agents</div>
+			<div class="rounded-full border border-black/10 dark:border-white/10 px-3 py-1.5">Research workflows</div>
+			<div class="rounded-full border border-black/10 dark:border-white/10 px-3 py-1.5">Expressive tools</div>
+			<div class="rounded-full border border-black/10 dark:border-white/10 px-3 py-1.5">{profileConfig.bio}</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	section {
+		backdrop-filter: blur(12px);
+	}
+</style>

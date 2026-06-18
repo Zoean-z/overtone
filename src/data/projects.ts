@@ -7,6 +7,7 @@ export type Project = {
 	stack: string[];
 	github: string;
 	demo?: string;
+	cover?: string;
 	status: string;
 	mark: string;
 	accent: string;

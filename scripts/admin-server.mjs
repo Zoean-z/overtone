@@ -3,6 +3,8 @@ import { createServer } from "node:http";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import MarkdownIt from "markdown-it";
+import sanitizeHtml from "sanitize-html";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
@@ -14,6 +16,13 @@ const projectsPath = path.join(rootDir, "src", "data", "projects.json");
 
 const host = "127.0.0.1";
 const port = 4312;
+
+const markdown = new MarkdownIt({
+	html: false,
+	linkify: true,
+	breaks: true,
+	typographer: true,
+});
 
 const accentPalette = [
 	"from-[oklch(0.34_0.08_330)] via-[oklch(0.26_0.04_265)] to-[oklch(0.18_0.02_250)]",
@@ -65,6 +74,7 @@ function normalizeProject(project, index) {
 					.filter(Boolean),
 		github: project.github?.trim() || "",
 		demo: project.demo?.trim() || "",
+		cover: project.cover?.trim() || "",
 		status: project.status?.trim() || "项目",
 		mark: project.mark?.trim() || createMark(project.title),
 		accent: project.accent?.trim() || accentPalette[index % accentPalette.length],
@@ -140,9 +150,7 @@ function parseFrontmatter(content) {
 			meta.draft = value === "true";
 			continue;
 		}
-		if (key in meta) {
-			meta[key] = value;
-		}
+		if (key in meta) meta[key] = value;
 	}
 
 	return { meta, body: match[2] };
@@ -171,9 +179,7 @@ async function collectPostFiles(dirPath) {
 			files.push(...(await collectPostFiles(fullPath)));
 			continue;
 		}
-		if (entry.isFile() && entry.name.endsWith(".md")) {
-			files.push(fullPath);
-		}
+		if (entry.isFile() && entry.name.endsWith(".md")) files.push(fullPath);
 	}
 	return files;
 }
@@ -204,15 +210,44 @@ function parseDataUrl(dataUrl) {
 }
 
 function extensionFromMime(mimeType, fileName = "") {
-	const direct =
-		{
-			"image/png": ".png",
-			"image/jpeg": ".jpg",
-			"image/webp": ".webp",
-			"image/gif": ".gif",
-		}[mimeType] || "";
+	const direct = {
+		"image/png": ".png",
+		"image/jpeg": ".jpg",
+		"image/webp": ".webp",
+		"image/gif": ".gif",
+	}[mimeType] || "";
 	if (direct) return direct;
 	return path.extname(fileName) || ".png";
+}
+
+function renderMarkdownPreview(source) {
+	const unsafeHtml = markdown.render(source || "");
+	return sanitizeHtml(unsafeHtml, {
+		allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+			"img",
+			"h1",
+			"h2",
+			"h3",
+			"h4",
+			"h5",
+			"h6",
+			"pre",
+			"code",
+			"blockquote",
+		]),
+		allowedAttributes: {
+			...sanitizeHtml.defaults.allowedAttributes,
+			a: ["href", "name", "target", "rel"],
+			code: ["class"],
+		},
+		allowedSchemes: ["http", "https", "mailto"],
+		transformTags: {
+			a: sanitizeHtml.simpleTransform("a", {
+				target: "_blank",
+				rel: "noreferrer noopener",
+			}),
+		},
+	});
 }
 
 async function saveImageUpload(payload) {
@@ -235,6 +270,15 @@ async function saveImageUpload(payload) {
 		return `/uploads/posts/${slug}${ext}`;
 	}
 
+	if (payload.kind === "project-cover") {
+		const slug = sanitizeSlug(payload.slug);
+		if (!slug) throw new Error("Project slug is required for cover upload");
+		const targetPath = path.join(publicDir, "uploads", "projects", `${slug}${ext}`);
+		await ensureDir(path.dirname(targetPath));
+		await fs.writeFile(targetPath, buffer);
+		return `/uploads/projects/${slug}${ext}`;
+	}
+
 	throw new Error("Unsupported upload kind");
 }
 
@@ -251,21 +295,82 @@ function runCommand(command, args) {
 	};
 }
 
+function summarizeFileChanges(statusOutput) {
+	return statusOutput
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter(Boolean)
+		.map((line) => ({
+			code: line.slice(0, 2).trim() || "M",
+			file: line.slice(3).trim(),
+		}));
+}
+
+function buildCommitMessage(changes) {
+	if (!changes.length) return "Update site content";
+
+	const postSlugs = new Set();
+	let projectChanged = false;
+	let settingsChanged = false;
+	let brandingChanged = false;
+
+	for (const change of changes) {
+		const file = change.file.replace(/\\/g, "/");
+		if (file.startsWith("src/content/posts/")) {
+			postSlugs.add(
+				file
+					.replace(/^src\/content\/posts\//, "")
+					.replace(/\.md$/i, "")
+					.replace(/\/index$/i, ""),
+			);
+		}
+		if (file === "src/data/projects.json" || file.startsWith("public/uploads/projects/")) {
+			projectChanged = true;
+		}
+		if (file === "src/data/site-settings.json") settingsChanged = true;
+		if (file.startsWith("public/brand/")) brandingChanged = true;
+	}
+
+	const parts = [];
+	if (postSlugs.size === 1) parts.push(`Update post ${[...postSlugs][0]}`);
+	else if (postSlugs.size > 1) parts.push(`Update ${postSlugs.size} posts`);
+	if (projectChanged) parts.push("refresh projects");
+	if (settingsChanged) parts.push("tune site settings");
+	if (brandingChanged) parts.push("update branding");
+
+	return parts.length ? parts.join(" and ") : "Update site content";
+}
+
+function getSuggestedCommitMessage() {
+	const statusResult = runCommand("git", ["status", "--short"]);
+	if (statusResult.status !== 0) {
+		throw new Error(statusResult.stderr || statusResult.stdout || "git status failed");
+	}
+	const changes = summarizeFileChanges(statusResult.stdout);
+	return {
+		message: buildCommitMessage(changes),
+		hasChanges: changes.length > 0,
+		changes,
+	};
+}
+
 async function handlePublish(message) {
 	const statusResult = runCommand("git", ["status", "--short"]);
 	if (statusResult.status !== 0) {
 		throw new Error(statusResult.stderr || statusResult.stdout || "git status failed");
 	}
 
-	const hasChanges = statusResult.stdout.trim().length > 0;
-	if (!hasChanges) {
-		return { ok: true, message: "没有可提交的改动。", output: statusResult.stdout };
+	const changes = summarizeFileChanges(statusResult.stdout);
+	if (!changes.length) {
+		return { ok: true, message: "没有可提交的改动。", output: statusResult.stdout, commitMessage: "" };
 	}
+
+	const commitMessage = message?.trim() || buildCommitMessage(changes);
 
 	const addResult = runCommand("git", ["add", "."]);
 	if (addResult.status !== 0) throw new Error(addResult.stderr || "git add failed");
 
-	const commitResult = runCommand("git", ["commit", "-m", message || "Update site content"]);
+	const commitResult = runCommand("git", ["commit", "-m", commitMessage]);
 	if (commitResult.status !== 0) {
 		throw new Error(commitResult.stderr || commitResult.stdout || "git commit failed");
 	}
@@ -278,6 +383,7 @@ async function handlePublish(message) {
 	return {
 		ok: true,
 		message: "已提交并推送。",
+		commitMessage,
 		output: [commitResult.stdout, commitResult.stderr, pushResult.stdout, pushResult.stderr]
 			.filter(Boolean)
 			.join("\n"),
@@ -313,13 +419,12 @@ async function parseRequestBody(req) {
 async function serveFile(filePath) {
 	const content = await fs.readFile(filePath);
 	const ext = path.extname(filePath);
-	const contentType =
-		{
-			".html": "text/html; charset=utf-8",
-			".js": "application/javascript; charset=utf-8",
-			".css": "text/css; charset=utf-8",
-			".json": "application/json; charset=utf-8",
-		}[ext] || "application/octet-stream";
+	const contentType = {
+		".html": "text/html; charset=utf-8",
+		".js": "application/javascript; charset=utf-8",
+		".css": "text/css; charset=utf-8",
+		".json": "application/json; charset=utf-8",
+	}[ext] || "application/octet-stream";
 	return { statusCode: 200, headers: { "Content-Type": contentType }, body: content };
 }
 
@@ -409,6 +514,21 @@ const server = createServer(async (req, res) => {
 			const body = await parseRequestBody(req);
 			const assetPath = await saveImageUpload(body);
 			const response = json({ ok: true, path: assetPath });
+			res.writeHead(response.statusCode, response.headers);
+			res.end(response.body);
+			return;
+		}
+
+		if (req.method === "POST" && requestUrl.pathname === "/api/markdown-preview") {
+			const body = await parseRequestBody(req);
+			const response = json({ ok: true, html: renderMarkdownPreview(body.markdown || "") });
+			res.writeHead(response.statusCode, response.headers);
+			res.end(response.body);
+			return;
+		}
+
+		if (req.method === "GET" && requestUrl.pathname === "/api/commit-message") {
+			const response = json({ ok: true, ...getSuggestedCommitMessage() });
 			res.writeHead(response.statusCode, response.headers);
 			res.end(response.body);
 			return;

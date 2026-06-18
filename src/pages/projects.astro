@@ -3,6 +3,7 @@ import { Icon } from "astro-icon/components";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 import { projects } from "../data/projects";
 ---
+
 <MainGridLayout title="项目" description="Zoean 的项目展示">
 	<div class="transition flex flex-col rounded-[var(--radius-large)] bg-[var(--card-bg)] py-1 md:py-0 md:bg-transparent md:gap-4 mb-4">
 		{projects.map((project, index) => (
@@ -68,12 +69,24 @@ import { projects } from "../data/projects";
 					class:list={[
 						"group",
 						"max-h-[22vh] md:max-h-none mx-4 mt-4 -mb-2 md:mb-0 md:mx-0 md:mt-0",
-						"md:w-[28%] relative md:absolute md:top-3 md:bottom-3 md:right-3 rounded-xl overflow-hidden active:scale-95",
-						`bg-gradient-to-br ${project.accent}`,
+						"md:w-[28%] relative md:absolute md:top-3 md:bottom-3 md:right-3 rounded-xl overflow-hidden active:scale-95 bg-black/10",
+						{ [`bg-gradient-to-br ${project.accent}`]: !project.cover },
 					]}
 				>
+					{project.cover && (
+						<img
+							src={project.cover}
+							alt={`${project.title} cover`}
+							class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+						/>
+					)}
 					<div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.25),transparent_38%)]"></div>
-					<div class="absolute inset-0 bg-[linear-gradient(160deg,rgba(255,255,255,0.08),transparent_45%)]"></div>
+					<div class:list={[
+						"absolute inset-0",
+						project.cover
+							? "bg-[linear-gradient(180deg,rgba(10,16,24,0.08),rgba(10,16,24,0.58))]"
+							: "bg-[linear-gradient(160deg,rgba(255,255,255,0.08),transparent_45%)]",
+					]}></div>
 					<div class="absolute pointer-events-none z-10 w-full h-full group-hover:bg-black/18 group-active:bg-black/28 transition"></div>
 					<div class="absolute pointer-events-none z-20 w-full h-full flex items-center justify-center">
 						<div class="text-center">

@@ -5,6 +5,7 @@
     "description": "它不是把歌曲当成播放器里的列表，而是把歌、情绪和日常片段一起组织成可回看的个人记录。",
     "stack": ["产品设计", "应用结构", "音乐体验"],
     "github": "https://github.com/Zoean-z/Innocence",
+    "cover": "",
     "status": "音乐日记 App",
     "mark": "IN",
     "accent": "from-[oklch(0.34_0.08_330)] via-[oklch(0.26_0.04_265)] to-[oklch(0.18_0.02_250)]"
@@ -16,6 +17,7 @@
     "stack": ["LLM Agent", "检索", "长期记忆"],
     "github": "https://github.com/Zoean-z/ResearchAgent",
     "demo": "https://zoean-z.github.io/ResearchAgent/",
+    "cover": "",
     "status": "自主研究工作流",
     "mark": "RA",
     "accent": "from-[oklch(0.31_0.07_230)] via-[oklch(0.22_0.04_235)] to-[oklch(0.16_0.02_240)]"
@@ -26,6 +28,7 @@
     "description": "以 Java 后端能力为基础，把业务接口、数据流转和智能体工作流结合起来，强调真实系统里的协作关系。",
     "stack": ["Java", "Spring Boot", "Agent"],
     "github": "https://github.com/Zoean-z/zhiyuan",
+    "cover": "",
     "status": "Java 后端 + Agent",
     "mark": "ZY",
     "accent": "from-[oklch(0.33_0.09_170)] via-[oklch(0.24_0.05_195)] to-[oklch(0.16_0.02_215)]"
@@ -37,6 +40,7 @@
     "stack": ["JavaScript", "游戏循环", "Roguelike"],
     "github": "https://github.com/Zoean-z/sword-",
     "demo": "https://zoean-z.github.io/sword-/",
+    "cover": "",
     "status": "在线肉鸽小游戏",
     "mark": "SW",
     "accent": "from-[oklch(0.38_0.10_60)] via-[oklch(0.25_0.05_30)] to-[oklch(0.15_0.02_20)]"
@@ -47,6 +51,7 @@
     "description": "目标是提升对联输出里的工整度、对仗关系和整体可读性，让小模型在窄任务上拿到更稳定的表现。",
     "stack": ["模型微调", "中文 NLP", "效果评估"],
     "github": "https://github.com/Zoean-z/couple-Qwen-0.8b",
+    "cover": "",
     "status": "中文生成实验",
     "mark": "QW",
     "accent": "from-[oklch(0.34_0.08_25)] via-[oklch(0.24_0.04_10)] to-[oklch(0.15_0.02_355)]"

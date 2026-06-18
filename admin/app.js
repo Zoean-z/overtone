@@ -6,9 +6,34 @@ const state = {
 };
 
 const $ = (id) => document.getElementById(id);
+let previewTimer = null;
 
 function setStatus(text) {
   $("publish-output").textContent = text || "";
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function projectSlug(project, index) {
+  const base = (project.title || project.mark || `project-${index + 1}`)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\u4e00-\u9fa5\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return base || `project-${index + 1}`;
+}
+
+function setPreviewPlaceholder(text = "这里会显示 Markdown 预览。") {
+  $("post-preview").innerHTML = `<div class="preview-empty">${escapeHtml(text)}</div>`;
 }
 
 async function api(path, options = {}) {
@@ -21,6 +46,39 @@ async function api(path, options = {}) {
     throw new Error(data.message || `Request failed: ${response.status}`);
   }
   return data;
+}
+
+async function updateMarkdownPreview(markdown) {
+  if (!markdown.trim()) {
+    setPreviewPlaceholder();
+    return;
+  }
+  const result = await api("/api/markdown-preview", {
+    method: "POST",
+    body: JSON.stringify({ markdown }),
+  });
+  $("post-preview").innerHTML = result.html || "";
+}
+
+function schedulePreview(markdown) {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(() => {
+    updateMarkdownPreview(markdown).catch((error) => {
+      setPreviewPlaceholder(`预览失败：${error.message}`);
+    });
+  }, 180);
+}
+
+async function suggestCommitMessage() {
+  const result = await api("/api/commit-message");
+  if (!result.hasChanges) {
+    $("publish-message").value = "";
+    setStatus("当前没有可提交的改动。");
+    return "";
+  }
+  $("publish-message").value = result.message || "";
+  setStatus(`已生成提交说明：${result.message}`);
+  return result.message || "";
 }
 
 function bindTabs() {
@@ -51,7 +109,7 @@ function renderPostList() {
   for (const post of state.posts) {
     const button = document.createElement("button");
     button.className = `list-item${state.currentPost?.slug === post.slug ? " active" : ""}`;
-    button.innerHTML = `<strong>${post.title || post.slug}</strong><small>${post.published || ""}</small>`;
+    button.innerHTML = `<strong>${escapeHtml(post.title || post.slug)}</strong><small>${escapeHtml(post.published || "")}</small>`;
     button.addEventListener("click", () => {
       state.currentPost = structuredClone(post);
       renderPostList();
@@ -83,6 +141,7 @@ function renderPostEditor() {
   $("post-draft").checked = Boolean(post.draft);
   $("post-body").value = post.body || "";
   $("post-cover-preview").src = post.image || "";
+  schedulePreview(post.body || "");
 }
 
 function renderProjects() {
@@ -93,20 +152,32 @@ function renderProjects() {
     item.className = "project-item";
     item.innerHTML = `
       <div class="project-head">
-        <h3>${project.title || `项目 ${index + 1}`}</h3>
+        <h3>${escapeHtml(project.title || `项目 ${index + 1}`)}</h3>
         <button class="danger" data-remove="${index}">删除</button>
       </div>
       <div class="project-grid">
-        <label><span>标题</span><input data-field="title" data-index="${index}" type="text" value="${project.title || ""}"></label>
-        <label><span>状态</span><input data-field="status" data-index="${index}" type="text" value="${project.status || ""}"></label>
-        <label><span>一句话</span><input data-field="tagline" data-index="${index}" type="text" value="${project.tagline || ""}"></label>
-        <label><span>技术栈</span><input data-field="stack" data-index="${index}" type="text" value="${(project.stack || []).join(", ")}"></label>
-        <label><span>GitHub</span><input data-field="github" data-index="${index}" type="text" value="${project.github || ""}"></label>
-        <label><span>Demo</span><input data-field="demo" data-index="${index}" type="text" value="${project.demo || ""}"></label>
-        <label><span>标记</span><input data-field="mark" data-index="${index}" type="text" value="${project.mark || ""}"></label>
-        <label><span>Accent</span><input data-field="accent" data-index="${index}" type="text" value="${project.accent || ""}"></label>
+        <label><span>标题</span><input data-field="title" data-index="${index}" type="text" value="${escapeHtml(project.title || "")}"></label>
+        <label><span>状态</span><input data-field="status" data-index="${index}" type="text" value="${escapeHtml(project.status || "")}"></label>
+        <label><span>一句话</span><input data-field="tagline" data-index="${index}" type="text" value="${escapeHtml(project.tagline || "")}"></label>
+        <label><span>标记</span><input data-field="mark" data-index="${index}" type="text" value="${escapeHtml(project.mark || "")}"></label>
+        <label><span>GitHub 链接</span><input data-field="github" data-index="${index}" type="text" value="${escapeHtml(project.github || "")}"></label>
+        <label><span>Demo 链接</span><input data-field="demo" data-index="${index}" type="text" value="${escapeHtml(project.demo || "")}"></label>
+        <label><span>技术栈</span><input data-field="stack" data-index="${index}" type="text" value="${escapeHtml((project.stack || []).join(", "))}"></label>
+        <label><span>渐变色</span><input data-field="accent" data-index="${index}" type="text" value="${escapeHtml(project.accent || "")}"></label>
       </div>
-      <label class="stacked"><span>描述</span><textarea data-field="description" data-index="${index}" rows="3">${project.description || ""}</textarea></label>
+      <div class="cover-row project-cover-grid">
+        <div class="cover-preview-wrap">
+          <img src="${escapeHtml(project.cover || "")}" alt="project cover preview" data-project-preview="${index}" />
+        </div>
+        <div class="cover-controls">
+          <label class="stacked">
+            <span>项目封面路径</span>
+            <input data-field="cover" data-index="${index}" type="text" value="${escapeHtml(project.cover || "")}">
+          </label>
+          <input data-project-upload="${index}" type="file" accept="image/*" />
+        </div>
+      </div>
+      <label class="stacked"><span>项目说明</span><textarea data-field="description" data-index="${index}" rows="3">${escapeHtml(project.description || "")}</textarea></label>
     `;
     container.appendChild(item);
   });
@@ -116,7 +187,14 @@ function renderProjects() {
       const target = event.currentTarget;
       const index = Number(target.dataset.index);
       const key = target.dataset.field;
-      state.projects[index][key] = key === "stack" ? target.value.split(",").map((x) => x.trim()).filter(Boolean) : target.value;
+      state.projects[index][key] =
+        key === "stack"
+          ? target.value.split(",").map((x) => x.trim()).filter(Boolean)
+          : target.value;
+      if (key === "cover") {
+        const preview = container.querySelector(`[data-project-preview="${index}"]`);
+        if (preview) preview.src = target.value;
+      }
     });
   });
 
@@ -125,6 +203,19 @@ function renderProjects() {
       const index = Number(button.dataset.remove);
       state.projects.splice(index, 1);
       renderProjects();
+    });
+  });
+
+  container.querySelectorAll("[data-project-upload]").forEach((input) => {
+    input.addEventListener("change", async (event) => {
+      const file = event.currentTarget.files?.[0];
+      if (!file) return;
+      const index = Number(event.currentTarget.dataset.projectUpload);
+      const slug = projectSlug(state.projects[index], index);
+      const assetPath = await uploadImage("project-cover", file, { slug });
+      state.projects[index].cover = assetPath;
+      renderProjects();
+      setStatus("项目封面已上传，记得保存项目。");
     });
   });
 }
@@ -241,7 +332,7 @@ function bindActions() {
     const result = await api("/api/post", { method: "POST", body: JSON.stringify(payload) });
     await bootstrap();
     const updated = state.posts.find((post) => post.slug === result.slug);
-    state.currentPost = structuredClone(updated);
+    state.currentPost = updated ? structuredClone(updated) : state.currentPost;
     renderPostList();
     renderPostEditor();
     setStatus("文章已保存。");
@@ -270,6 +361,10 @@ function bindActions() {
     setStatus("文章封面已上传，记得保存文章。");
   });
 
+  $("post-body").addEventListener("input", (event) => {
+    schedulePreview(event.currentTarget.value);
+  });
+
   $("add-project").addEventListener("click", () => {
     state.projects.push({
       title: "新项目",
@@ -278,6 +373,7 @@ function bindActions() {
       stack: [],
       github: "",
       demo: "",
+      cover: "",
       status: "项目",
       mark: "NP",
       accent: "",
@@ -292,6 +388,10 @@ function bindActions() {
     setStatus("项目列表已保存。");
   });
 
+  $("suggest-message").addEventListener("click", async () => {
+    await suggestCommitMessage();
+  });
+
   $("validate-site").addEventListener("click", async () => {
     setStatus("正在本地检查...");
     const result = await api("/api/validate", { method: "POST", body: JSON.stringify({}) });
@@ -299,12 +399,19 @@ function bindActions() {
   });
 
   $("publish-site").addEventListener("click", async () => {
+    let message = $("publish-message").value.trim();
+    if (!message) {
+      message = await suggestCommitMessage();
+    }
     setStatus("正在提交并推送...");
     const result = await api("/api/publish", {
       method: "POST",
-      body: JSON.stringify({ message: $("publish-message").value.trim() || "Update site content" }),
+      body: JSON.stringify({ message }),
     });
-    setStatus([result.message, result.output].filter(Boolean).join("\n\n"));
+    if (result.commitMessage) {
+      $("publish-message").value = result.commitMessage;
+    }
+    setStatus([result.message, result.commitMessage ? `commit: ${result.commitMessage}` : "", result.output].filter(Boolean).join("\n\n"));
   });
 }
 
@@ -312,4 +419,5 @@ bindTabs();
 bindActions();
 bootstrap().catch((error) => {
   setStatus(error.message);
+  setPreviewPlaceholder(`加载失败：${error.message}`);
 });

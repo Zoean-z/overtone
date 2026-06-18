@@ -1,6 +1,6 @@
 {
   "title": "overtone.zoean",
-  "subtitle": "你听见的，不止于此。",
+  "subtitle": "what you hear is not all there is.",
   "lang": "zh_CN",
   "themeColor": {
     "hue": 205,
@@ -9,7 +9,7 @@
   "banner": {
     "enable": true,
     "src": "/brand/banner.png",
-    "position": "top",
+    "position": "center",
     "credit": {
       "enable": false,
       "text": "",

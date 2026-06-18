@@ -46,6 +46,14 @@ function setPreviewPlaceholder(text = "这里会显示 Markdown 预览。") {
   $("post-preview").innerHTML = `<div class="preview-empty">${escapeHtml(text)}</div>`;
 }
 
+function getCurrentPostTagsFromInput() {
+  return dedupeTagList(($("post-tags").value || "").split(","));
+}
+
+function setCurrentPostTags(tags) {
+  $("post-tags").value = dedupeTagList(tags).join(", ");
+}
+
 async function api(path, options = {}) {
   const response = await fetch(path, {
     headers: { "Content-Type": "application/json" },
@@ -94,6 +102,43 @@ async function suggestCommitMessage() {
 function refreshTagHint() {
   const names = state.tags.map((tag) => tag.name).filter(Boolean);
   $("tag-hint").textContent = names.length ? `当前标签库：${names.join(" / ")}` : "当前还没有标签。";
+}
+
+function renderPostTagLibrary() {
+  const container = $("post-tag-library");
+  const selectedTags = new Set(getCurrentPostTagsFromInput());
+  const registryNames = dedupeTagList(state.tags.map((tag) => tag.name));
+  const rawInput = $("post-tags").value || "";
+  const currentToken = normalizeTagName(rawInput.split(",").at(-1));
+
+  container.innerHTML = "";
+
+  registryNames.forEach((name) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `tag-chip${selectedTags.has(name) ? " active" : ""}`;
+    button.textContent = name;
+    button.addEventListener("click", () => {
+      const next = selectedTags.has(name)
+        ? [...selectedTags].filter((tag) => tag !== name)
+        : [...selectedTags, name];
+      setCurrentPostTags(next);
+      renderPostTagLibrary();
+    });
+    container.appendChild(button);
+  });
+
+  if (currentToken && !registryNames.includes(currentToken) && !selectedTags.has(currentToken)) {
+    const createButton = document.createElement("button");
+    createButton.type = "button";
+    createButton.className = "tag-chip create";
+    createButton.textContent = `新增: ${currentToken}`;
+    createButton.addEventListener("click", () => {
+      setCurrentPostTags([...selectedTags, currentToken]);
+      renderPostTagLibrary();
+    });
+    container.appendChild(createButton);
+  }
 }
 
 function bindTabs() {
@@ -158,6 +203,7 @@ function renderPostEditor() {
   $("post-cover-preview").src = post.image || "";
   schedulePreview(post.body || "");
   refreshTagHint();
+  renderPostTagLibrary();
 }
 
 function renderTags() {
@@ -187,6 +233,7 @@ function renderTags() {
       const index = Number(target.dataset.index);
       state.tags[index].name = target.value;
       refreshTagHint();
+      renderPostTagLibrary();
     });
   });
 
@@ -202,6 +249,7 @@ function renderTags() {
   });
 
   refreshTagHint();
+  renderPostTagLibrary();
 }
 
 function renderProjects() {
@@ -326,7 +374,7 @@ function collectCurrentPost() {
     published: $("post-published").value,
     description: $("post-description").value.trim(),
     image: $("post-image").value.trim(),
-    tags: dedupeTagList($("post-tags").value.split(",")),
+    tags: getCurrentPostTagsFromInput(),
     category: $("post-category").value.trim(),
     draft: $("post-draft").checked,
     body: $("post-body").value,
@@ -456,6 +504,22 @@ function bindActions() {
 
   $("post-body").addEventListener("input", (event) => {
     schedulePreview(event.currentTarget.value);
+  });
+
+  $("post-tags").addEventListener("input", () => {
+    renderPostTagLibrary();
+  });
+
+  $("post-tags").addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    setCurrentPostTags(getCurrentPostTagsFromInput());
+    renderPostTagLibrary();
+  });
+
+  $("post-tags").addEventListener("blur", () => {
+    setCurrentPostTags(getCurrentPostTagsFromInput());
+    renderPostTagLibrary();
   });
 
   $("add-tag").addEventListener("click", () => {

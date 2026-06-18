@@ -12,11 +12,12 @@
         <div class="brand">
           <div class="eyebrow">Local admin</div>
           <h1>overtone.zoean</h1>
-          <p>本地内容后台。写文章、改封面、检查构建、提交推送都在这里完成。</p>
+          <p>本地内容后台。写文章、改项目、维护标签、检查构建和提交推送都在这里完成。</p>
         </div>
         <nav class="nav">
           <button class="nav-btn active" data-tab="settings">站点设置</button>
           <button class="nav-btn" data-tab="posts">文章</button>
+          <button class="nav-btn" data-tab="tags">标签</button>
           <button class="nav-btn" data-tab="projects">项目</button>
           <button class="nav-btn" data-tab="publish">发布</button>
         </nav>
@@ -126,6 +127,8 @@
                 </label>
               </div>
 
+              <div id="tag-hint" class="input-hint"></div>
+
               <label class="stacked">
                 <span>摘要</span>
                 <textarea id="post-description" rows="2"></textarea>
@@ -160,6 +163,25 @@
                 </section>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="tags">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">Tags</div>
+              <h2>标签管理</h2>
+            </div>
+            <div class="actions">
+              <button id="add-tag" class="ghost">新建标签</button>
+              <button id="save-tags" class="primary">保存标签</button>
+            </div>
+          </div>
+          <div class="tag-panel">
+            <div class="tag-panel-note">
+              重命名和删除会同步修改所有文章里的对应标签。新建标签会进入标签库，即使暂时还没有文章使用它。
+            </div>
+            <div id="tag-list" class="tag-admin-list"></div>
           </div>
         </section>
 

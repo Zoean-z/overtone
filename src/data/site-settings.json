@@ -9,7 +9,7 @@
   "banner": {
     "enable": true,
     "src": "/brand/banner.png",
-    "position": "center",
+    "position": "center 18%",
     "credit": {
       "enable": false,
       "text": "",

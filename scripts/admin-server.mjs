@@ -13,6 +13,7 @@ const postsDir = path.join(rootDir, "src", "content", "posts");
 const publicDir = path.join(rootDir, "public");
 const siteSettingsPath = path.join(rootDir, "src", "data", "site-settings.json");
 const projectsPath = path.join(rootDir, "src", "data", "projects.json");
+const tagRegistryPath = path.join(rootDir, "src", "data", "tag-registry.json");
 
 const host = "127.0.0.1";
 const port = 4312;
@@ -49,6 +50,14 @@ function sanitizeSlug(value) {
 		.replace(/-+/g, "-")
 		.replace(/\/+/g, "/")
 		.replace(/^\/|\/$/g, "");
+}
+
+function normalizeTagName(value) {
+	return String(value || "").trim();
+}
+
+function dedupeTagList(values) {
+	return [...new Set((values || []).map(normalizeTagName).filter(Boolean))];
 }
 
 function createMark(title) {
@@ -140,10 +149,11 @@ function parseFrontmatter(content) {
 		value = value.replace(/^["']|["']$/g, "");
 		if (key === "tags") {
 			const tagText = value.replace(/^\[|\]$/g, "");
-			meta.tags = tagText
-				.split(",")
-				.map((tag) => tag.trim().replace(/^["']|["']$/g, ""))
-				.filter(Boolean);
+			meta.tags = dedupeTagList(
+				tagText
+					.split(",")
+					.map((tag) => tag.trim().replace(/^["']|["']$/g, "")),
+			);
 			continue;
 		}
 		if (key === "draft") {
@@ -157,7 +167,7 @@ function parseFrontmatter(content) {
 }
 
 function serializePost(post) {
-	const tagsText = `[${post.tags.map((tag) => tag).join(", ")}]`;
+	const tagsText = `[${dedupeTagList(post.tags).join(", ")}]`;
 	return `---\n`
 		+ `title: ${post.title}\n`
 		+ `published: ${post.published}\n`
@@ -193,11 +203,51 @@ async function listPosts() {
 		posts.push({
 			slug: pathToPostSlug(filePath),
 			...meta,
+			tags: dedupeTagList(meta.tags),
 			body,
 		});
 	}
 	posts.sort((a, b) => String(b.published).localeCompare(String(a.published)));
 	return posts;
+}
+
+async function writePosts(posts) {
+	for (const post of posts) {
+		await fs.writeFile(
+			postSlugToPath(post.slug),
+			serializePost({
+				...post,
+				tags: dedupeTagList(post.tags),
+			}),
+			"utf8",
+		);
+	}
+}
+
+async function readTagRegistry() {
+	try {
+		const tags = await readJson(tagRegistryPath);
+		return dedupeTagList(tags);
+	} catch {
+		return [];
+	}
+}
+
+async function writeTagRegistry(tags) {
+	await writeJson(tagRegistryPath, dedupeTagList(tags).sort((a, b) => a.localeCompare(b, "zh-CN")));
+}
+
+function buildTagRecords(posts, registry) {
+	const countMap = new Map();
+	for (const tag of dedupeTagList(registry)) countMap.set(tag, 0);
+	for (const post of posts) {
+		for (const tag of dedupeTagList(post.tags)) {
+			countMap.set(tag, (countMap.get(tag) || 0) + 1);
+		}
+	}
+	return [...countMap.entries()]
+		.sort((a, b) => a[0].localeCompare(b[0], "zh-CN"))
+		.map(([name, count]) => ({ name, count }));
 }
 
 function parseDataUrl(dataUrl) {
@@ -313,6 +363,7 @@ function buildCommitMessage(changes) {
 	let projectChanged = false;
 	let settingsChanged = false;
 	let brandingChanged = false;
+	let tagsChanged = false;
 
 	for (const change of changes) {
 		const file = change.file.replace(/\\/g, "/");
@@ -328,6 +379,7 @@ function buildCommitMessage(changes) {
 			projectChanged = true;
 		}
 		if (file === "src/data/site-settings.json") settingsChanged = true;
+		if (file === "src/data/tag-registry.json") tagsChanged = true;
 		if (file.startsWith("public/brand/")) brandingChanged = true;
 	}
 
@@ -335,6 +387,7 @@ function buildCommitMessage(changes) {
 	if (postSlugs.size === 1) parts.push(`Update post ${[...postSlugs][0]}`);
 	else if (postSlugs.size > 1) parts.push(`Update ${postSlugs.size} posts`);
 	if (projectChanged) parts.push("refresh projects");
+	if (tagsChanged) parts.push("sync tags");
 	if (settingsChanged) parts.push("tune site settings");
 	if (brandingChanged) parts.push("update branding");
 
@@ -351,6 +404,53 @@ function getSuggestedCommitMessage() {
 		message: buildCommitMessage(changes),
 		hasChanges: changes.length > 0,
 		changes,
+	};
+}
+
+async function applyTagOperations(operations) {
+	const posts = await listPosts();
+	const registry = await readTagRegistry();
+	let registrySet = new Set(dedupeTagList(registry));
+
+	for (const op of operations || []) {
+		if (op.type === "create") {
+			const name = normalizeTagName(op.name);
+			if (!name) continue;
+			registrySet.add(name);
+			continue;
+		}
+
+		if (op.type === "rename") {
+			const from = normalizeTagName(op.from);
+			const to = normalizeTagName(op.to);
+			if (!from || !to) continue;
+			registrySet.delete(from);
+			registrySet.add(to);
+			for (const post of posts) {
+				post.tags = dedupeTagList(post.tags.map((tag) => (tag === from ? to : tag)));
+			}
+			continue;
+		}
+
+		if (op.type === "delete") {
+			const name = normalizeTagName(op.name);
+			if (!name) continue;
+			registrySet.delete(name);
+			for (const post of posts) {
+				post.tags = dedupeTagList(post.tags.filter((tag) => tag !== name));
+			}
+		}
+	}
+
+	const allPostTags = posts.flatMap((post) => dedupeTagList(post.tags));
+	registrySet = new Set([...registrySet, ...allPostTags]);
+
+	await writePosts(posts);
+	await writeTagRegistry([...registrySet]);
+
+	return {
+		posts,
+		tags: buildTagRecords(posts, [...registrySet]),
 	};
 }
 
@@ -436,7 +536,8 @@ const server = createServer(async (req, res) => {
 			const settings = await readJson(siteSettingsPath);
 			const projects = await readJson(projectsPath);
 			const posts = await listPosts();
-			const response = json({ settings, projects, posts });
+			const tags = buildTagRecords(posts, await readTagRegistry());
+			const response = json({ settings, projects, posts, tags });
 			res.writeHead(response.statusCode, response.headers);
 			res.end(response.body);
 			return;
@@ -461,6 +562,15 @@ const server = createServer(async (req, res) => {
 			return;
 		}
 
+		if (req.method === "POST" && requestUrl.pathname === "/api/tags") {
+			const body = await parseRequestBody(req);
+			const result = await applyTagOperations(body.operations || []);
+			const response = json({ ok: true, posts: result.posts, tags: result.tags });
+			res.writeHead(response.statusCode, response.headers);
+			res.end(response.body);
+			return;
+		}
+
 		if (req.method === "POST" && requestUrl.pathname === "/api/post") {
 			const body = await parseRequestBody(req);
 			const slug = sanitizeSlug(body.slug || body.title);
@@ -468,6 +578,14 @@ const server = createServer(async (req, res) => {
 			const originalSlug = sanitizeSlug(body.originalSlug || slug);
 			const postPath = postSlugToPath(slug);
 			const originalPath = postSlugToPath(originalSlug);
+			const tags = dedupeTagList(
+				Array.isArray(body.tags)
+					? body.tags.map((tag) => String(tag).trim())
+					: String(body.tags || "")
+							.split(",")
+							.map((tag) => tag.trim()),
+			);
+
 			await ensureDir(path.dirname(postPath));
 			await fs.writeFile(
 				postPath,
@@ -476,12 +594,7 @@ const server = createServer(async (req, res) => {
 					published: body.published?.trim() || new Date().toISOString().slice(0, 10),
 					description: body.description?.trim() || "",
 					image: body.image?.trim() || "",
-					tags: Array.isArray(body.tags)
-						? body.tags.map((tag) => String(tag).trim()).filter(Boolean)
-						: String(body.tags || "")
-								.split(",")
-								.map((tag) => tag.trim())
-								.filter(Boolean),
+					tags,
 					category: body.category?.trim() || "",
 					draft: Boolean(body.draft),
 					body: body.body || "",
@@ -493,6 +606,10 @@ const server = createServer(async (req, res) => {
 					await fs.unlink(originalPath);
 				} catch {}
 			}
+
+			const registry = await readTagRegistry();
+			await writeTagRegistry([...registry, ...tags]);
+
 			const response = json({ ok: true, slug });
 			res.writeHead(response.statusCode, response.headers);
 			res.end(response.body);

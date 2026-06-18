@@ -2,6 +2,7 @@ import { type CollectionEntry, getCollection } from "astro:content";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { getCategoryUrl } from "@utils/url-utils.ts";
+import tagRegistry from "../data/tag-registry.json";
 
 // // Retrieve posts and sort them by publication date
 async function getRawSortedPosts() {
@@ -57,10 +58,16 @@ export async function getTagList(): Promise<Tag[]> {
 	});
 
 	const countMap: { [key: string]: number } = {};
+	for (const tag of tagRegistry) {
+		const normalized = String(tag).trim();
+		if (normalized && !countMap[normalized]) countMap[normalized] = 0;
+	}
 	allBlogPosts.forEach((post: { data: { tags: string[] } }) => {
 		post.data.tags.forEach((tag: string) => {
-			if (!countMap[tag]) countMap[tag] = 0;
-			countMap[tag]++;
+			const normalized = String(tag).trim();
+			if (!normalized) return;
+			if (!countMap[normalized]) countMap[normalized] = 0;
+			countMap[normalized]++;
 		});
 	});
 

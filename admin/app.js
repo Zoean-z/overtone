@@ -2,7 +2,9 @@ const state = {
   settings: null,
   projects: [],
   posts: [],
+  tags: [],
   currentPost: null,
+  removedTags: [],
 };
 
 const $ = (id) => document.getElementById(id);
@@ -19,6 +21,14 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function normalizeTagName(value) {
+  return String(value || "").trim();
+}
+
+function dedupeTagList(values) {
+  return [...new Set((values || []).map(normalizeTagName).filter(Boolean))];
 }
 
 function projectSlug(project, index) {
@@ -79,6 +89,11 @@ async function suggestCommitMessage() {
   $("publish-message").value = result.message || "";
   setStatus(`已生成提交说明：${result.message}`);
   return result.message || "";
+}
+
+function refreshTagHint() {
+  const names = state.tags.map((tag) => tag.name).filter(Boolean);
+  $("tag-hint").textContent = names.length ? `当前标签库：${names.join(" / ")}` : "当前还没有标签。";
 }
 
 function bindTabs() {
@@ -142,6 +157,51 @@ function renderPostEditor() {
   $("post-body").value = post.body || "";
   $("post-cover-preview").src = post.image || "";
   schedulePreview(post.body || "");
+  refreshTagHint();
+}
+
+function renderTags() {
+  const container = $("tag-list");
+  container.innerHTML = "";
+  state.tags.forEach((tag, index) => {
+    const item = document.createElement("div");
+    item.className = "tag-admin-item";
+    item.innerHTML = `
+      <div class="tag-admin-main">
+        <label>
+          <span>标签名</span>
+          <input data-tag-field="name" data-index="${index}" type="text" value="${escapeHtml(tag.name || "")}">
+        </label>
+        <div class="tag-meta-pill">${Number(tag.count || 0)} 篇文章</div>
+      </div>
+      <div class="tag-admin-actions">
+        <button class="danger" data-remove-tag="${index}">删除</button>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+
+  container.querySelectorAll("[data-tag-field]").forEach((field) => {
+    field.addEventListener("input", (event) => {
+      const target = event.currentTarget;
+      const index = Number(target.dataset.index);
+      state.tags[index].name = target.value;
+      refreshTagHint();
+    });
+  });
+
+  container.querySelectorAll("[data-remove-tag]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.removeTag);
+      const [removed] = state.tags.splice(index, 1);
+      if (removed?.originalName) {
+        state.removedTags.push(removed.originalName);
+      }
+      renderTags();
+    });
+  });
+
+  refreshTagHint();
 }
 
 function renderProjects() {
@@ -266,11 +326,37 @@ function collectCurrentPost() {
     published: $("post-published").value,
     description: $("post-description").value.trim(),
     image: $("post-image").value.trim(),
-    tags: $("post-tags").value.split(",").map((x) => x.trim()).filter(Boolean),
+    tags: dedupeTagList($("post-tags").value.split(",")),
     category: $("post-category").value.trim(),
     draft: $("post-draft").checked,
     body: $("post-body").value,
   };
+}
+
+function collectTagOperations() {
+  const operations = [];
+  const seenNames = new Set();
+
+  for (const tag of state.tags) {
+    const name = normalizeTagName(tag.name);
+    if (!name || seenNames.has(name)) continue;
+    seenNames.add(name);
+
+    if (!tag.originalName) {
+      operations.push({ type: "create", name });
+      continue;
+    }
+
+    if (tag.originalName !== name) {
+      operations.push({ type: "rename", from: tag.originalName, to: name });
+    }
+  }
+
+  for (const name of [...new Set(state.removedTags.map(normalizeTagName).filter(Boolean))]) {
+    operations.push({ type: "delete", name });
+  }
+
+  return operations;
 }
 
 async function bootstrap() {
@@ -278,10 +364,17 @@ async function bootstrap() {
   state.settings = data.settings;
   state.projects = data.projects;
   state.posts = data.posts;
+  state.tags = (data.tags || []).map((tag) => ({
+    originalName: tag.name,
+    name: tag.name,
+    count: tag.count,
+  }));
+  state.removedTags = [];
   state.currentPost = state.posts[0] ? structuredClone(state.posts[0]) : null;
   renderSettings();
   renderPostList();
   renderPostEditor();
+  renderTags();
   renderProjects();
 }
 
@@ -363,6 +456,42 @@ function bindActions() {
 
   $("post-body").addEventListener("input", (event) => {
     schedulePreview(event.currentTarget.value);
+  });
+
+  $("add-tag").addEventListener("click", () => {
+    state.tags.push({
+      originalName: "",
+      name: "新标签",
+      count: 0,
+    });
+    renderTags();
+  });
+
+  $("save-tags").addEventListener("click", async () => {
+    const operations = collectTagOperations();
+    if (!operations.length) {
+      setStatus("标签没有变化。");
+      return;
+    }
+    const result = await api("/api/tags", {
+      method: "POST",
+      body: JSON.stringify({ operations }),
+    });
+    state.posts = result.posts || state.posts;
+    state.tags = (result.tags || []).map((tag) => ({
+      originalName: tag.name,
+      name: tag.name,
+      count: tag.count,
+    }));
+    state.removedTags = [];
+    if (state.currentPost?.slug) {
+      const updated = state.posts.find((post) => post.slug === state.currentPost.slug);
+      if (updated) state.currentPost = structuredClone(updated);
+    }
+    renderPostList();
+    renderPostEditor();
+    renderTags();
+    setStatus("标签库已保存，并同步到相关文章。");
   });
 
   $("add-project").addEventListener("click", () => {

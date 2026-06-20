@@ -1,55 +1,55 @@
 {
-  "title": "overtone.zoean",
-  "subtitle": "what you hear is not all there is.",
-  "lang": "zh_CN",
-  "themeColor": {
-    "hue": 205,
-    "fixed": false
-  },
-  "banner": {
-    "enable": true,
-    "src": "/brand/banner.png",
-    "position": "center 18%",
-    "credit": {
-      "enable": false,
-      "text": "",
-      "url": ""
-    }
-  },
-  "toc": {
-    "enable": true,
-    "depth": 2
-  },
-  "favicon": [
-    {
-      "src": "/brand/overtone-favicon.svg"
-    }
-  ],
-  "profile": {
-    "avatar": "/brand/avatar.png",
-    "name": "Zoean",
-    "bio": "吉他低手，不懂CS",
-    "links": [
-      {
-        "name": "GitHub",
-        "icon": "fa6-brands:github",
-        "url": "https://github.com/Zoean-z"
-      },
-      {
-        "name": "Innocence",
-        "icon": "fa6-solid:music",
-        "url": "https://github.com/Zoean-z/Innocence"
-      },
-      {
-        "name": "ResearchAgent",
-        "icon": "fa6-solid:book-open-reader",
-        "url": "https://github.com/Zoean-z/ResearchAgent"
-      }
-    ]
-  },
-  "license": {
-    "enable": true,
-    "name": "CC BY-NC-SA 4.0",
-    "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
-  }
+	"title": "overtone.zoean",
+	"subtitle": "what you hear is not all there is.",
+	"lang": "zh_CN",
+	"themeColor": {
+		"hue": 205,
+		"fixed": false
+	},
+	"banner": {
+		"enable": true,
+		"src": "/brand/banner.png",
+		"position": "center 18%",
+		"credit": {
+			"enable": false,
+			"text": "",
+			"url": ""
+		}
+	},
+	"toc": {
+		"enable": true,
+		"depth": 2
+	},
+	"favicon": [
+		{
+			"src": "/brand/overtone-favicon.svg"
+		}
+	],
+	"profile": {
+		"avatar": "/brand/avatar.png",
+		"name": "Zoean",
+		"bio": "吉他低手，不懂CS",
+		"links": [
+			{
+				"name": "GitHub",
+				"icon": "fa6-brands:github",
+				"url": "https://github.com/Zoean-z"
+			},
+			{
+				"name": "Innocence",
+				"icon": "fa6-solid:music",
+				"url": "https://github.com/Zoean-z/Innocence"
+			},
+			{
+				"name": "ResearchAgent",
+				"icon": "fa6-solid:book-open-reader",
+				"url": "https://github.com/Zoean-z/ResearchAgent"
+			}
+		]
+	},
+	"license": {
+		"enable": true,
+		"name": "CC BY-NC-SA 4.0",
+		"url": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+	}
 }

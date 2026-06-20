@@ -1,3 +1,4 @@
+import siteSettings from "./data/site-settings.json";
 import type {
 	ExpressiveCodeConfig,
 	LicenseConfig,
@@ -5,7 +6,6 @@ import type {
 	ProfileConfig,
 	SiteConfig,
 } from "./types/config";
-import siteSettings from "./data/site-settings.json";
 import { LinkPreset } from "./types/config";
 
 const settings = siteSettings as {

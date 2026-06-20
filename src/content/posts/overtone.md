@@ -1,12 +1,13 @@
 ---
 title: Overtone
 published: 2026-06-18
-description: 一个关于 overtone.zoean 这个名字为什么存在的简短说明。
+description: 一个简单的开始
 image: /uploads/posts/overtone.jpg
 tags: [网站, 随笔, 音乐]
 category: 随笔
 draft: false
 ---
+
 
 
 `overtone.zoean` 这个名字，起点是一个音乐里的概念。他是泛音，也指那些潜伏在表音之外别的声音
@@ -16,4 +17,5 @@ draft: false
 不停在第一层表象，而是向外思考更本质的东西
 
 这个网站之后会放项目记录、技术写作，以及一些想法和随笔。
+
 

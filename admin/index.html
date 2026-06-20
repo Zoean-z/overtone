@@ -16,6 +16,7 @@
         </div>
         <nav class="nav">
           <button class="nav-btn active" data-tab="settings">站点设置</button>
+          <button class="nav-btn" data-tab="about">关于</button>
           <button class="nav-btn" data-tab="posts">文章</button>
           <button class="nav-btn" data-tab="tags">标签</button>
           <button class="nav-btn" data-tab="projects">项目</button>
@@ -57,6 +58,15 @@
             <textarea id="profile-bio" rows="3"></textarea>
           </label>
 
+          <div class="panel-subhead">
+            <div>
+              <div class="eyebrow">Links</div>
+              <h3>头像下方链接</h3>
+            </div>
+            <button id="add-profile-link" class="ghost" type="button">新增链接</button>
+          </div>
+          <div id="profile-link-list" class="link-admin-list"></div>
+
           <div class="grid two media-grid">
             <div class="media-card">
               <div class="media-head">
@@ -79,6 +89,32 @@
               </div>
               <img id="banner-preview" alt="banner preview" />
             </div>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="about">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">About</div>
+              <h2>关于页</h2>
+            </div>
+            <button id="save-about" class="primary">保存关于页</button>
+          </div>
+
+          <div class="body-workbench">
+            <label class="stacked">
+              <span>Markdown 内容</span>
+              <textarea id="about-content" rows="22"></textarea>
+            </label>
+            <section class="preview-pane">
+              <div class="preview-head">
+                <div>
+                  <div class="eyebrow">Preview</div>
+                  <h3>关于页预览</h3>
+                </div>
+              </div>
+              <div id="about-preview" class="prose-preview"></div>
+            </section>
           </div>
         </section>
 

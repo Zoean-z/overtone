@@ -14,6 +14,7 @@ const publicDir = path.join(rootDir, "public");
 const siteSettingsPath = path.join(rootDir, "src", "data", "site-settings.json");
 const projectsPath = path.join(rootDir, "src", "data", "projects.json");
 const tagRegistryPath = path.join(rootDir, "src", "data", "tag-registry.json");
+const aboutPath = path.join(rootDir, "src", "content", "spec", "about.md");
 
 const host = "127.0.0.1";
 const port = 4312;
@@ -110,6 +111,14 @@ async function readJson(filePath) {
 
 async function writeJson(filePath, value) {
 	await fs.writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+}
+
+async function readText(filePath) {
+	return fs.readFile(filePath, "utf8");
+}
+
+async function writeText(filePath, value) {
+	await fs.writeFile(filePath, value, "utf8");
 }
 
 function parseFrontmatter(content) {
@@ -364,6 +373,7 @@ function buildCommitMessage(changes) {
 	let settingsChanged = false;
 	let brandingChanged = false;
 	let tagsChanged = false;
+	let aboutChanged = false;
 
 	for (const change of changes) {
 		const file = change.file.replace(/\\/g, "/");
@@ -380,6 +390,7 @@ function buildCommitMessage(changes) {
 		}
 		if (file === "src/data/site-settings.json") settingsChanged = true;
 		if (file === "src/data/tag-registry.json") tagsChanged = true;
+		if (file === "src/content/spec/about.md") aboutChanged = true;
 		if (file.startsWith("public/brand/")) brandingChanged = true;
 	}
 
@@ -389,6 +400,7 @@ function buildCommitMessage(changes) {
 	if (projectChanged) parts.push("refresh projects");
 	if (tagsChanged) parts.push("sync tags");
 	if (settingsChanged) parts.push("tune site settings");
+	if (aboutChanged) parts.push("update about page");
 	if (brandingChanged) parts.push("update branding");
 
 	return parts.length ? parts.join(" and ") : "Update site content";
@@ -537,7 +549,8 @@ const server = createServer(async (req, res) => {
 			const projects = await readJson(projectsPath);
 			const posts = await listPosts();
 			const tags = buildTagRecords(posts, await readTagRegistry());
-			const response = json({ settings, projects, posts, tags });
+			const aboutContent = await readText(aboutPath);
+			const response = json({ settings, projects, posts, tags, aboutContent });
 			res.writeHead(response.statusCode, response.headers);
 			res.end(response.body);
 			return;
@@ -557,6 +570,15 @@ const server = createServer(async (req, res) => {
 			const projects = (body.projects || []).map(normalizeProject);
 			await writeJson(projectsPath, projects);
 			const response = json({ ok: true, projects });
+			res.writeHead(response.statusCode, response.headers);
+			res.end(response.body);
+			return;
+		}
+
+		if (req.method === "POST" && requestUrl.pathname === "/api/about") {
+			const body = await parseRequestBody(req);
+			await writeText(aboutPath, body.content || "");
+			const response = json({ ok: true });
 			res.writeHead(response.statusCode, response.headers);
 			res.end(response.body);
 			return;

@@ -3,12 +3,14 @@ const state = {
   projects: [],
   posts: [],
   tags: [],
+  aboutContent: "",
   currentPost: null,
   removedTags: [],
 };
 
 const $ = (id) => document.getElementById(id);
-let previewTimer = null;
+let postPreviewTimer = null;
+let aboutPreviewTimer = null;
 
 function setStatus(text) {
   $("publish-output").textContent = text || "";
@@ -79,10 +81,33 @@ async function updateMarkdownPreview(markdown) {
 }
 
 function schedulePreview(markdown) {
-  clearTimeout(previewTimer);
-  previewTimer = setTimeout(() => {
+  clearTimeout(postPreviewTimer);
+  postPreviewTimer = setTimeout(() => {
     updateMarkdownPreview(markdown).catch((error) => {
       setPreviewPlaceholder(`预览失败：${error.message}`);
+    });
+  }, 180);
+}
+
+async function updateHtmlPreview(targetId, markdown, emptyText = "这里会显示 Markdown 预览。") {
+  const target = $(targetId);
+  if (!target) return;
+  if (!String(markdown || "").trim()) {
+    target.innerHTML = `<div class="preview-empty">${escapeHtml(emptyText)}</div>`;
+    return;
+  }
+  const result = await api("/api/markdown-preview", {
+    method: "POST",
+    body: JSON.stringify({ markdown }),
+  });
+  target.innerHTML = result.html || "";
+}
+
+function scheduleAboutPreview(markdown) {
+  clearTimeout(aboutPreviewTimer);
+  aboutPreviewTimer = setTimeout(() => {
+    updateHtmlPreview("about-preview", markdown).catch((error) => {
+      $("about-preview").innerHTML = `<div class="preview-empty">${escapeHtml(`预览失败：${error.message}`)}</div>`;
     });
   }, 180);
 }
@@ -161,6 +186,57 @@ function renderSettings() {
   $("theme-hue").value = settings.themeColor.hue ?? 205;
   $("avatar-preview").src = settings.profile.avatar || "";
   $("banner-preview").src = settings.banner.src || "";
+  renderProfileLinks();
+}
+
+function renderProfileLinks() {
+  const container = $("profile-link-list");
+  if (!container) return;
+  const links = state.settings?.profile?.links || [];
+  container.innerHTML = "";
+
+  links.forEach((link, index) => {
+    const item = document.createElement("div");
+    item.className = "link-admin-item";
+    item.innerHTML = `
+      <label>
+        <span>名称</span>
+        <input data-link-field="name" data-index="${index}" type="text" value="${escapeHtml(link.name || "")}">
+      </label>
+      <label>
+        <span>图标</span>
+        <input data-link-field="icon" data-index="${index}" type="text" value="${escapeHtml(link.icon || "")}">
+      </label>
+      <label>
+        <span>链接</span>
+        <input data-link-field="url" data-index="${index}" type="text" value="${escapeHtml(link.url || "")}">
+      </label>
+      <button class="danger" type="button" data-remove-link="${index}">删除</button>
+    `;
+    container.appendChild(item);
+  });
+
+  container.querySelectorAll("[data-link-field]").forEach((field) => {
+    field.addEventListener("input", (event) => {
+      const target = event.currentTarget;
+      const index = Number(target.dataset.index);
+      const key = target.dataset.linkField;
+      state.settings.profile.links[index][key] = target.value;
+    });
+  });
+
+  container.querySelectorAll("[data-remove-link]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.removeLink);
+      state.settings.profile.links.splice(index, 1);
+      renderProfileLinks();
+    });
+  });
+}
+
+function renderAboutEditor() {
+  $("about-content").value = state.aboutContent || "";
+  scheduleAboutPreview(state.aboutContent || "");
 }
 
 function renderPostList() {
@@ -362,6 +438,13 @@ function collectSettings() {
       ...state.settings.profile,
       name: $("profile-name").value.trim(),
       bio: $("profile-bio").value.trim(),
+      links: (state.settings.profile.links || [])
+        .map((link) => ({
+          name: String(link.name || "").trim(),
+          icon: String(link.icon || "").trim(),
+          url: String(link.url || "").trim(),
+        }))
+        .filter((link) => link.name || link.icon || link.url),
     },
   };
 }
@@ -412,6 +495,7 @@ async function bootstrap() {
   state.settings = data.settings;
   state.projects = data.projects;
   state.posts = data.posts;
+  state.aboutContent = data.aboutContent || "";
   state.tags = (data.tags || []).map((tag) => ({
     originalName: tag.name,
     name: tag.name,
@@ -424,6 +508,7 @@ async function bootstrap() {
   renderPostEditor();
   renderTags();
   renderProjects();
+  renderAboutEditor();
 }
 
 function bindActions() {
@@ -449,6 +534,16 @@ function bindActions() {
     state.settings.banner.src = assetPath;
     $("banner-preview").src = assetPath;
     setStatus("头图已上传，记得保存站点设置。");
+  });
+
+  $("add-profile-link").addEventListener("click", () => {
+    state.settings.profile.links ||= [];
+    state.settings.profile.links.push({
+      name: "新链接",
+      icon: "fa6-solid:link",
+      url: "",
+    });
+    renderProfileLinks();
   });
 
   $("new-post").addEventListener("click", () => {
@@ -579,6 +674,20 @@ function bindActions() {
     state.projects = result.projects;
     renderProjects();
     setStatus("项目列表已保存。");
+  });
+
+  $("about-content").addEventListener("input", (event) => {
+    state.aboutContent = event.currentTarget.value;
+    scheduleAboutPreview(state.aboutContent);
+  });
+
+  $("save-about").addEventListener("click", async () => {
+    await api("/api/about", {
+      method: "POST",
+      body: JSON.stringify({ content: $("about-content").value }),
+    });
+    state.aboutContent = $("about-content").value;
+    setStatus("关于页内容已保存。");
   });
 
   $("suggest-message").addEventListener("click", async () => {

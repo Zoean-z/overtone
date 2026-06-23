@@ -1,0 +1,343 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+	itemId: string;
+	label?: string;
+	className?: string;
+}
+
+const { itemId, label = "点赞", className = "" } = Astro.props;
+---
+
+<button
+	type="button"
+	data-like-button
+	data-like-id={itemId}
+	data-liked="false"
+	data-loading="true"
+	aria-pressed="false"
+	class:list={[
+		"like-button btn-regular rounded-full h-10 px-4 active:scale-95",
+		className,
+	]}
+>
+	<span class="like-button__icon" aria-hidden="true">
+		<Icon name="fa6-solid:heart" class="text-sm" />
+	</span>
+	<span class="like-button__label">{label}</span>
+	<span class="like-button__count" data-like-count>...</span>
+</button>
+
+<script is:inline>
+(() => {
+	const VISITOR_KEY = "overtone-like-visitor:v1";
+	const LOCAL_FALLBACK_KEY = "overtone-like-local-fallback:v1";
+
+	const createFallbackState = () => ({ items: {} });
+
+	const readLocalFallback = () => {
+		try {
+			const raw = localStorage.getItem(LOCAL_FALLBACK_KEY);
+			if (!raw) return createFallbackState();
+			const parsed = JSON.parse(raw);
+			return parsed && typeof parsed === "object" ? parsed : createFallbackState();
+		} catch {
+			return createFallbackState();
+		}
+	};
+
+	const writeLocalFallback = () => {
+		try {
+			localStorage.setItem(
+				LOCAL_FALLBACK_KEY,
+				JSON.stringify(window.__overtoneLikeFallback || createFallbackState()),
+			);
+		} catch {}
+	};
+
+	const getVisitorId = () => {
+		try {
+			const existing = localStorage.getItem(VISITOR_KEY);
+			if (existing) return existing;
+			const next =
+				globalThis.crypto?.randomUUID?.() ||
+				`visitor-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+			localStorage.setItem(VISITOR_KEY, next);
+			return next;
+		} catch {
+			return `visitor-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+		}
+	};
+
+	const ensureState = () => {
+		if (!window.__overtoneLikeState) {
+			window.__overtoneLikeState = {
+				visitorId: getVisitorId(),
+				items: {},
+				storageMode: "remote",
+			};
+		}
+		if (!window.__overtoneLikeFallback) {
+			window.__overtoneLikeFallback = readLocalFallback();
+		}
+		return window.__overtoneLikeState;
+	};
+
+	const getFallbackItem = (itemId) => {
+		const fallback = window.__overtoneLikeFallback || createFallbackState();
+		fallback.items ||= {};
+		fallback.items[itemId] ||= { count: 0, liked: false };
+		return fallback.items[itemId];
+	};
+
+	const setItemState = (itemId, nextState) => {
+		const state = ensureState();
+		state.items[itemId] = {
+			...(state.items[itemId] || {}),
+			...nextState,
+		};
+	};
+
+	const renderButton = (button) => {
+		const state = ensureState();
+		const itemId = button.dataset.likeId;
+		const likeState = state.items[itemId] || { count: 0, liked: false, loading: true };
+		const countNode = button.querySelector("[data-like-count]");
+
+		button.dataset.liked = String(Boolean(likeState.liked));
+		button.dataset.loading = String(Boolean(likeState.loading));
+		button.setAttribute("aria-pressed", String(Boolean(likeState.liked)));
+		button.disabled = Boolean(likeState.loading);
+		button.setAttribute(
+			"title",
+			likeState.loading ? "加载中" : likeState.liked ? "取消点赞" : "点赞",
+		);
+
+		if (countNode) {
+			countNode.textContent = likeState.loading ? "..." : String(Math.max(Number(likeState.count || 0), 0));
+		}
+	};
+
+	const refreshLikes = () => {
+		document.querySelectorAll("[data-like-button]").forEach((button) => renderButton(button));
+	};
+
+	const requestJson = async (url, options = {}) => {
+		const response = await fetch(url, {
+			headers: { "Content-Type": "application/json" },
+			...options,
+		});
+		const data = await response.json().catch(() => ({}));
+		if (!response.ok || data.ok === false) {
+			const error = new Error(data.message || `Request failed: ${response.status}`);
+			error.code = data.code;
+			throw error;
+		}
+		return data;
+	};
+
+	const syncItem = async (itemId) => {
+		const state = ensureState();
+		setItemState(itemId, { loading: true });
+		refreshLikes();
+
+		try {
+			const data = await requestJson(
+				`/api/likes?id=${encodeURIComponent(itemId)}&viewer=${encodeURIComponent(state.visitorId)}`,
+			);
+			state.storageMode = "remote";
+			setItemState(itemId, {
+				count: Number(data.count || 0),
+				liked: Boolean(data.liked),
+				loading: false,
+			});
+		} catch (error) {
+			if (error?.code === "LIKE_STORAGE_MISSING") {
+				state.storageMode = "local";
+			}
+			const fallbackItem = getFallbackItem(itemId);
+			setItemState(itemId, { ...fallbackItem, loading: false });
+		}
+
+		refreshLikes();
+	};
+
+	const toggleLocalFallback = (itemId) => {
+		const state = ensureState();
+		const item = getFallbackItem(itemId);
+		if (item.liked) {
+			item.liked = false;
+			item.count = Math.max(Number(item.count || 0) - 1, 0);
+		} else {
+			item.liked = true;
+			item.count = Math.max(Number(item.count || 0), 0) + 1;
+		}
+		writeLocalFallback();
+		setItemState(itemId, { ...item, loading: false });
+		state.storageMode = "local";
+		refreshLikes();
+	};
+
+	const toggleRemote = async (itemId) => {
+		const state = ensureState();
+		setItemState(itemId, { ...(state.items[itemId] || {}), loading: true });
+		refreshLikes();
+
+		try {
+			const data = await requestJson("/api/likes", {
+				method: "POST",
+				body: JSON.stringify({
+					id: itemId,
+					viewerId: state.visitorId,
+				}),
+			});
+			state.storageMode = "remote";
+			setItemState(itemId, {
+				count: Number(data.count || 0),
+				liked: Boolean(data.liked),
+				loading: false,
+			});
+			refreshLikes();
+		} catch (error) {
+			if (error?.code === "LIKE_STORAGE_MISSING") {
+				toggleLocalFallback(itemId);
+				return;
+			}
+			setItemState(itemId, { ...(state.items[itemId] || {}), loading: false });
+			refreshLikes();
+		}
+	};
+
+	const toggleLike = async (itemId) => {
+		const state = ensureState();
+		if (state.storageMode === "local") {
+			toggleLocalFallback(itemId);
+			return;
+		}
+		await toggleRemote(itemId);
+	};
+
+	const primeButtons = () => {
+		const ids = [
+			...new Set(
+				Array.from(document.querySelectorAll("[data-like-button]"))
+					.map((button) => button.dataset.likeId)
+					.filter(Boolean),
+			),
+		];
+
+		ids.forEach((id) => {
+			if (!ensureState().items[id]) {
+				syncItem(id);
+			}
+		});
+
+		refreshLikes();
+	};
+
+	if (!window.__overtoneLikeInit) {
+		window.__overtoneLikeInit = true;
+		window.__overtoneLikeRefresh = primeButtons;
+
+		document.addEventListener("click", (event) => {
+			const target = event.target;
+			if (!(target instanceof Element)) return;
+			const button = target.closest("[data-like-button]");
+			if (!button || button.disabled) return;
+			event.preventDefault();
+			const itemId = button.dataset.likeId;
+			if (!itemId) return;
+			toggleLike(itemId);
+		});
+
+		window.addEventListener("storage", (event) => {
+			if (event.key === LOCAL_FALLBACK_KEY) {
+				window.__overtoneLikeFallback = readLocalFallback();
+			}
+			if (event.key === VISITOR_KEY) {
+				window.__overtoneLikeState = null;
+			}
+			window.__overtoneLikeRefresh?.();
+		});
+
+		const bindSwupRefresh = () => {
+			if (window.__overtoneLikeSwupBound || !window.swup?.hooks) return;
+			window.__overtoneLikeSwupBound = true;
+			window.swup.hooks.on("page:view", () => {
+				window.__overtoneLikeRefresh?.();
+			});
+		};
+
+		if (window.swup?.hooks) {
+			bindSwupRefresh();
+		} else {
+			document.addEventListener("swup:enable", bindSwupRefresh, { once: true });
+		}
+	}
+
+	queueMicrotask(() => {
+		window.__overtoneLikeRefresh?.();
+	});
+})();
+</script>
+
+<style>
+	.like-button {
+		gap: 0.6rem;
+		width: fit-content;
+		max-width: 100%;
+	}
+
+	.like-button:disabled {
+		opacity: 0.92;
+		cursor: default;
+	}
+
+	.like-button__icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--primary);
+		transition: transform 180ms ease, color 180ms ease;
+	}
+
+	.like-button__label {
+		font-weight: 600;
+		letter-spacing: 0.01em;
+	}
+
+	.like-button__count {
+		display: inline-flex;
+		min-width: 1.75rem;
+		height: 1.75rem;
+		padding: 0 0.5rem;
+		align-items: center;
+		justify-content: center;
+		border-radius: 999px;
+		background: color-mix(in oklab, var(--primary) 10%, transparent);
+		color: var(--primary);
+		font-size: 0.85rem;
+		font-weight: 700;
+		line-height: 1;
+	}
+
+	.like-button[data-loading="true"] .like-button__count {
+		min-width: 2.2rem;
+	}
+
+	.like-button[data-liked="true"] {
+		background: var(--primary);
+		color: white;
+	}
+
+	.like-button[data-liked="true"] .like-button__icon {
+		color: white;
+		transform: scale(1.08);
+	}
+
+	.like-button[data-liked="true"] .like-button__count {
+		background: rgba(255, 255, 255, 0.16);
+		color: white;
+	}
+</style>

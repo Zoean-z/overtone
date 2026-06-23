@@ -1,7 +1,16 @@
 ---
 import { Icon } from "astro-icon/components";
+import LikeButton from "@components/feedback/LikeButton.astro";
 import { projects } from "../data/projects";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+
+const getProjectLikeId = (title: string) =>
+	`project:${title
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9\u4e00-\u9fa5\s-]/g, "")
+		.replace(/\s+/g, "-")
+		.replace(/-+/g, "-")}`;
 ---
 
 <MainGridLayout title="项目" description="Zoean 的项目展示">
@@ -49,6 +58,7 @@ import MainGridLayout from "../layouts/MainGridLayout.astro";
 								<Icon name="fa6-solid:play" class="text-xs" />
 							</a>
 						)}
+						<LikeButton itemId={getProjectLikeId(project.title)} label="喜欢" />
 					</div>
 
 					<div class="pr-4 text-sm leading-7 text-black/42 dark:text-white/42">

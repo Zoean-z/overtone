@@ -1,8 +1,11 @@
 import { Redis } from "@upstash/redis";
+import type { APIRoute } from "astro";
 
 declare const process: {
 	env: Record<string, string | undefined>;
 };
+
+export const prerender = false;
 
 const redisUrl =
 	process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
@@ -34,11 +37,15 @@ function getLikeKey(itemId: string) {
 }
 
 function normalizeItemId(value: unknown) {
-	return String(value || "").trim().slice(0, 160);
+	return String(value || "")
+		.trim()
+		.slice(0, 160);
 }
 
 function normalizeViewerId(value: unknown) {
-	return String(value || "").trim().slice(0, 160);
+	return String(value || "")
+		.trim()
+		.slice(0, 160);
 }
 
 async function readLikeState(itemId: string, viewerId?: string) {
@@ -48,12 +55,14 @@ async function readLikeState(itemId: string, viewerId?: string) {
 
 	const key = getLikeKey(itemId);
 	const count = Number((await redis.scard(key)) || 0);
-	const liked = viewerId ? Boolean(await redis.sismember(key, viewerId)) : false;
+	const liked = viewerId
+		? Boolean(await redis.sismember(key, viewerId))
+		: false;
 
 	return { available: true, count, liked };
 }
 
-export async function GET(request: Request) {
+export const GET = (async ({ request }) => {
 	const url = new URL(request.url);
 	const itemId = normalizeItemId(url.searchParams.get("id"));
 	const viewerId = normalizeViewerId(url.searchParams.get("viewer"));
@@ -75,15 +84,18 @@ export async function GET(request: Request) {
 	}
 
 	return json({ ok: true, itemId, count: result.count, liked: result.liked });
-}
+}) satisfies APIRoute;
 
-export async function POST(request: Request) {
+export const POST = (async ({ request }) => {
 	const body = await request.json().catch(() => null);
 	const itemId = normalizeItemId(body?.id);
 	const viewerId = normalizeViewerId(body?.viewerId);
 
 	if (!itemId || !viewerId) {
-		return json({ ok: false, message: "Missing like item id or viewer id." }, 400);
+		return json(
+			{ ok: false, message: "Missing like item id or viewer id." },
+			400,
+		);
 	}
 
 	if (!redis) {
@@ -114,4 +126,4 @@ export async function POST(request: Request) {
 		count,
 		liked: !alreadyLiked,
 	});
-}
+}) satisfies APIRoute;

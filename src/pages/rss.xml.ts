@@ -8,6 +8,8 @@ import { siteConfig } from "@/config";
 
 const parser = new MarkdownIt();
 
+export const prerender = true;
+
 function stripInvalidXmlChars(str: string): string {
 	return str.replace(
 		// biome-ignore lint/suspicious/noControlCharactersInRegex: https://www.w3.org/TR/xml/#charsets
@@ -22,7 +24,7 @@ export async function GET(context: APIContext) {
 	return rss({
 		title: siteConfig.title,
 		description: siteConfig.subtitle || "No description",
-		site: context.site ?? "https://fuwari.vercel.app",
+		site: context.site ?? "https://overtone.pages.dev",
 		items: blog.map((post) => {
 			const content =
 				typeof post.body === "string" ? post.body : String(post.body || "");

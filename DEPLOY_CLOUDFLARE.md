@@ -46,9 +46,12 @@ npx wrangler kv namespace create SESSION
 构建配置填：
 
 ```txt
-Build command: npx astro build
-Deploy command: npx wrangler deploy
+Build command: pnpm build
+Deploy command: pnpm cf:deploy
 ```
+
+不要再用 `npx wrangler deploy` 这个裸命令。
+这个项目的 Cloudflare Worker 入口在 `dist/_worker.js/index.js`，静态资源目录在 `dist`，需要显式传给 `wrangler`。
 
 ## 4. 本地预览
 

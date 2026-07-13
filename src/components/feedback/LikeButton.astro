@@ -144,7 +144,7 @@ const { itemId, label = "点赞", className = "" } = Astro.props;
 
 		try {
 			const data = await requestJson(
-				`/api/likes?id=${encodeURIComponent(itemId)}&viewer=${encodeURIComponent(state.visitorId)}`,
+				`/api/likes/?id=${encodeURIComponent(itemId)}&viewer=${encodeURIComponent(state.visitorId)}`,
 			);
 			state.storageMode = "remote";
 			setItemState(itemId, {
@@ -185,7 +185,7 @@ const { itemId, label = "点赞", className = "" } = Astro.props;
 		refreshLikes();
 
 		try {
-			const data = await requestJson("/api/likes", {
+			const data = await requestJson("/api/likes/", {
 				method: "POST",
 				body: JSON.stringify({
 					id: itemId,

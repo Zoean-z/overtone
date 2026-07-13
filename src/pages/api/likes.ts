@@ -1,24 +1,42 @@
 import { Redis } from "@upstash/redis";
 import type { APIRoute } from "astro";
 
-declare const process: {
-	env: Record<string, string | undefined>;
+type RuntimeEnv = Record<string, unknown>;
+
+type RuntimeLocals = {
+	runtime?: {
+		env?: RuntimeEnv;
+	};
 };
 
 export const prerender = false;
 
-const redisUrl =
-	process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-const redisToken =
-	process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+function getEnvironmentValue(env: RuntimeEnv | undefined, key: string) {
+	const runtimeValue = env?.[key];
+	if (typeof runtimeValue === "string" && runtimeValue.trim())
+		return runtimeValue;
 
-const redis =
-	redisUrl && redisToken
+	// Keeps the endpoint usable when it is deployed through a Node-style runtime.
+	if (typeof process !== "undefined") return process.env?.[key];
+	return undefined;
+}
+
+function getRedis(locals: unknown) {
+	const env = (locals as RuntimeLocals | undefined)?.runtime?.env;
+	const redisUrl =
+		getEnvironmentValue(env, "UPSTASH_REDIS_REST_URL") ||
+		getEnvironmentValue(env, "KV_REST_API_URL");
+	const redisToken =
+		getEnvironmentValue(env, "UPSTASH_REDIS_REST_TOKEN") ||
+		getEnvironmentValue(env, "KV_REST_API_TOKEN");
+
+	return redisUrl && redisToken
 		? new Redis({
 				url: redisUrl,
 				token: redisToken,
 			})
 		: null;
+}
 
 const headers = {
 	"Content-Type": "application/json; charset=utf-8",
@@ -48,7 +66,11 @@ function normalizeViewerId(value: unknown) {
 		.slice(0, 160);
 }
 
-async function readLikeState(itemId: string, viewerId?: string) {
+async function readLikeState(
+	redis: Redis | null,
+	itemId: string,
+	viewerId?: string,
+) {
 	if (!redis) {
 		return { available: false, count: 0, liked: false };
 	}
@@ -62,7 +84,7 @@ async function readLikeState(itemId: string, viewerId?: string) {
 	return { available: true, count, liked };
 }
 
-export const GET = (async ({ request }) => {
+export const GET = (async ({ request, locals }) => {
 	const url = new URL(request.url);
 	const itemId = normalizeItemId(url.searchParams.get("id"));
 	const viewerId = normalizeViewerId(url.searchParams.get("viewer"));
@@ -71,7 +93,7 @@ export const GET = (async ({ request }) => {
 		return json({ ok: false, message: "Missing like item id." }, 400);
 	}
 
-	const result = await readLikeState(itemId, viewerId);
+	const result = await readLikeState(getRedis(locals), itemId, viewerId);
 	if (!result.available) {
 		return json(
 			{
@@ -86,7 +108,7 @@ export const GET = (async ({ request }) => {
 	return json({ ok: true, itemId, count: result.count, liked: result.liked });
 }) satisfies APIRoute;
 
-export const POST = (async ({ request }) => {
+export const POST = (async ({ request, locals }) => {
 	const body = await request.json().catch(() => null);
 	const itemId = normalizeItemId(body?.id);
 	const viewerId = normalizeViewerId(body?.viewerId);
@@ -98,6 +120,7 @@ export const POST = (async ({ request }) => {
 		);
 	}
 
+	const redis = getRedis(locals);
 	if (!redis) {
 		return json(
 			{

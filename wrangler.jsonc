@@ -3,10 +3,7 @@
 	"name": "overtone",
 	"main": "dist/_worker.js/index.js",
 	"compatibility_date": "2026-06-23",
-	"compatibility_flags": [
-		"nodejs_compat",
-		"global_fetch_strictly_public"
-	],
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 	"assets": {
 		"binding": "ASSETS",
 		"directory": "./dist"
@@ -18,11 +15,6 @@
 		{
 			"binding": "SESSION",
 			"id": "cc771ef7c0de4476afd0bece90356ca7"
-		},
-		{
-			"binding": "SESSION",
-			"id": "cc771ef7c0de4476afd0bece90356ca7",
-			"remote": true
 		}
 	],
 	"observability": {

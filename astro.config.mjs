@@ -1,11 +1,11 @@
-import cloudflare from "@astrojs/cloudflare";
 import sitemap from "@astrojs/sitemap";
 import svelte from "@astrojs/svelte";
 import tailwind from "@astrojs/tailwind";
+import vercel from "@astrojs/vercel";
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
 import swup from "@swup/astro";
-import { defineConfig } from "astro/config";
+import { defineConfig, passthroughImageService } from "astro/config";
 import expressiveCode from "astro-expressive-code";
 import icon from "astro-icon";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
@@ -25,7 +25,7 @@ import { parseDirectiveNode } from "./src/plugins/remark-directive-rehype.js";
 import { remarkExcerpt } from "./src/plugins/remark-excerpt.js";
 import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
 
-const defaultSiteUrl = "https://overtone.pages.dev/";
+const defaultSiteUrl = "https://overtone-seven.vercel.app/";
 const siteUrl = (process.env.PUBLIC_SITE_URL || defaultSiteUrl).replace(
 	/\/?$/,
 	"/",
@@ -33,13 +33,13 @@ const siteUrl = (process.env.PUBLIC_SITE_URL || defaultSiteUrl).replace(
 
 // https://astro.build/config
 export default defineConfig({
-	adapter: cloudflare({
-		imageService: "compile",
-		sessionKVBindingName: "SESSION",
-	}),
+	adapter: vercel(),
 	site: siteUrl,
 	base: "/",
 	output: "server",
+	image: {
+		service: passthroughImageService(),
+	},
 	trailingSlash: "always",
 	integrations: [
 		tailwind({

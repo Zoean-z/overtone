@@ -1,0 +1,37 @@
+---
+import PostCard from "../components/PostCard.astro";
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+import { getAlgorithmPosts } from "../utils/content-utils";
+import { getPostUrlBySlug } from "../utils/url-utils";
+
+export const prerender = true;
+
+const algorithmPosts = await getAlgorithmPosts();
+---
+
+<MainGridLayout title="算法题" description="算法题与解题思路记录">
+    <div class="card-base px-6 py-7 md:px-9 md:py-8 mb-4 onload-animation">
+        <div class="text-xs uppercase tracking-[0.24em] text-black/45 dark:text-white/45 mb-3">ALGORITHM NOTES</div>
+        <h1 class="text-3xl md:text-4xl font-bold tracking-[-0.04em] text-black/90 dark:text-white/90 mb-3">算法题记录</h1>
+        <div class="mt-5 text-sm text-black/40 dark:text-white/40">共 {algorithmPosts.length} 篇记录</div>
+    </div>
+
+    <div class="flex flex-col gap-4">
+        {algorithmPosts.map((entry, index) => (
+            <PostCard
+                entry={entry}
+                title={entry.data.title}
+                tags={entry.data.tags}
+                category={entry.data.category}
+                published={entry.data.published}
+                updated={entry.data.updated}
+                url={getPostUrlBySlug(entry.slug)}
+                image={entry.data.image}
+                description={entry.data.description}
+                draft={entry.data.draft}
+                class="onload-animation"
+                style={`animation-delay: calc(var(--content-delay) + ${index * 50}ms);`}
+            ></PostCard>
+        ))}
+    </div>
+</MainGridLayout>

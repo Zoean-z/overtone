@@ -4,6 +4,8 @@ import { i18n } from "@i18n/translation";
 import { getCategoryUrl } from "@utils/url-utils.ts";
 import tagRegistry from "../data/tag-registry.json";
 
+export const ALGORITHM_CATEGORY = "算法题";
+
 // // Retrieve posts and sort them by publication date
 async function getRawSortedPosts() {
 	const allBlogPosts = await getCollection("posts", ({ data }) => {
@@ -31,6 +33,16 @@ export async function getSortedPosts() {
 	}
 
 	return sorted;
+}
+
+export async function getHomePosts() {
+	const sorted = await getSortedPosts();
+	return sorted.filter((post) => post.data.category !== ALGORITHM_CATEGORY);
+}
+
+export async function getAlgorithmPosts() {
+	const sorted = await getSortedPosts();
+	return sorted.filter((post) => post.data.category === ALGORITHM_CATEGORY);
 }
 export type PostForList = {
 	slug: string;

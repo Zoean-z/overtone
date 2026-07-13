@@ -5,6 +5,7 @@ import "@fontsource/roboto/700.css";
 
 import ConfigCarrier from "@components/ConfigCarrier.astro";
 import { profileConfig, siteConfig } from "@/config";
+import MusicPlayer from "../components/MusicPlayer.svelte";
 import {
 	AUTO_MODE,
 	BANNER_HEIGHT,
@@ -16,6 +17,7 @@ import {
 	PAGE_WIDTH,
 } from "../constants/constants";
 import { defaultFavicons } from "../constants/icon";
+import musicTracks from "../data/music.json";
 import type { Favicon } from "../types/config";
 import { pathsEqual, url } from "../utils/url-utils";
 import "katex/dist/katex.css";
@@ -152,6 +154,7 @@ const bannerOffset =
 		  data-overlayscrollbars-initialize
 	>
 		<ConfigCarrier></ConfigCarrier>
+		<MusicPlayer client:only="svelte" tracks={musicTracks} />
 		<slot />
 
 		<!-- increase the page height during page transition to prevent the scrolling animation from jumping -->
@@ -402,6 +405,7 @@ const setup = () => {
 		}
 		if (document.body.scrollTop >= threshold || document.documentElement.scrollTop >= threshold) {
 			navbar.classList.add('navbar-hidden')
+			document.getElementById('music-player')?.classList.add('navbar-hidden')
 		}
 	})
 	window.swup.hooks.on('content:replace', initCustomScrollbar)
@@ -488,8 +492,10 @@ function scrollFunction() {
 		let threshold = window.innerHeight * (bannerHeight / 100) - NAVBAR_HEIGHT - MAIN_PANEL_EXCESS_HEIGHT - 16
 		if (document.body.scrollTop >= threshold || document.documentElement.scrollTop >= threshold) {
 			navbar.classList.add('navbar-hidden')
+			document.getElementById('music-player')?.classList.add('navbar-hidden')
 		} else {
 			navbar.classList.remove('navbar-hidden')
+			document.getElementById('music-player')?.classList.remove('navbar-hidden')
 		}
 	}
 }

@@ -38,6 +38,10 @@ export const navBarConfig: NavBarConfig = {
 			url: "/projects/",
 		},
 		LinkPreset.Archive,
+		{
+			name: "算法题",
+			url: "/algorithms/",
+		},
 		LinkPreset.About,
 		{
 			name: "GitHub",

@@ -20,7 +20,7 @@ let sliderValue = 0;
 let pendingSeek: number | null = null;
 let isSeeking = false;
 let mobileMenuOpen = false;
-let mobileExpanded = false;
+let playerExpanded = false;
 
 $: currentTrack = tracks[currentIndex] || {
 	title: "暂无音乐",
@@ -118,15 +118,13 @@ function finishSeek(event: Event) {
 	updateProgress();
 }
 
-function toggleMobilePlayer() {
-	if (window.innerWidth < 768) {
-		mobileExpanded = !mobileExpanded;
-	}
+function togglePlayer() {
+	playerExpanded = !playerExpanded;
 }
 
-function collapseMobilePlayer() {
-	if (window.innerWidth < 768 && mobileExpanded) {
-		mobileExpanded = false;
+function collapsePlayerOnScroll() {
+	if (window.innerWidth < 768 && playerExpanded) {
+		playerExpanded = false;
 	}
 }
 
@@ -160,7 +158,7 @@ onMount(() => {
 	const menuPanel = document.getElementById("nav-menu-panel");
 	const syncMobileMenuState = () => {
 		mobileMenuOpen = !menuPanel?.classList.contains("float-panel-closed");
-		if (mobileMenuOpen) mobileExpanded = false;
+		if (mobileMenuOpen) playerExpanded = false;
 	};
 	const menuObserver = menuPanel
 		? new MutationObserver(syncMobileMenuState)
@@ -171,12 +169,12 @@ onMount(() => {
 		attributes: true,
 		attributeFilter: ["class"],
 	});
-	window.addEventListener("scroll", collapseMobilePlayer, { passive: true });
+	window.addEventListener("scroll", collapsePlayerOnScroll, { passive: true });
 	loadTrack(0);
 
 	return () => {
 		menuObserver?.disconnect();
-		window.removeEventListener("scroll", collapseMobilePlayer);
+		window.removeEventListener("scroll", collapsePlayerOnScroll);
 		audio.pause();
 		audio.remove();
 	};
@@ -188,16 +186,16 @@ onMount(() => {
 	class="music-player card-base"
 	class:error={hasError}
 	class:mobile-menu-open={mobileMenuOpen}
-	class:mobile-expanded={mobileExpanded}
+	class:player-expanded={playerExpanded}
 	aria-label="音乐播放器"
 	title={hasError ? "音频加载失败，请检查文件路径" : currentTrack.title}
 >
 	<button
 		class="music-cover-wrap"
 		type="button"
-		aria-label={mobileExpanded ? "Collapse music player" : "Expand music player"}
-		aria-expanded={mobileExpanded}
-		onclick={toggleMobilePlayer}
+		aria-label={playerExpanded ? "Collapse music player" : "Expand music player"}
+		aria-expanded={playerExpanded}
+		onclick={togglePlayer}
 	>
 		<img class="music-cover" src={currentTrack.cover} alt={`${currentTrack.title} 封面`} />
 		<div class:playing={isPlaying} class="music-cover-glow"></div>
@@ -242,24 +240,28 @@ onMount(() => {
 <style>
 	.music-player {
 		position: fixed;
-		top: 0;
-		right: 1rem;
-		z-index: 60;
+		top: auto;
+		bottom: max(1rem, env(safe-area-inset-bottom));
+		right: 1.25rem;
+		z-index: 45;
 		display: grid;
-		grid-template-columns: 4.5rem minmax(0, 1fr);
-		gap: 0.75rem;
-		width: 20rem;
-		padding: 0.65rem;
-		border-radius: 0 0 var(--radius-large) var(--radius-large);
+		grid-template-columns: 4.25rem 0fr;
+		gap: 0;
+		width: 4.75rem;
+		padding: 0.25rem;
+		overflow: hidden;
+		border-radius: 1.25rem;
 		box-shadow: 0 1rem 2.5rem color-mix(in oklab, black 18%, transparent);
 		color: var(--btn-content);
-		transition: border-color 180ms ease, box-shadow 180ms ease, opacity 300ms ease, transform 300ms ease;
+		transition: width 260ms ease, gap 260ms ease, padding 260ms ease, border-radius 260ms ease, border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease, transform 260ms ease;
 	}
 
-	.music-player.navbar-hidden {
-		pointer-events: none;
-		opacity: 0;
-		transform: translateY(-110%);
+	.music-player.player-expanded {
+		grid-template-columns: 4.25rem minmax(0, 1fr);
+		gap: 0.75rem;
+		width: 22rem;
+		padding: 0.7rem;
+		border-radius: var(--radius-large);
 	}
 
 	.music-player:hover {
@@ -273,14 +275,14 @@ onMount(() => {
 
 	.music-cover-wrap {
 		position: relative;
-		width: 4.5rem;
-		height: 4.5rem;
+		width: 4.25rem;
+		height: 4.25rem;
 		padding: 0;
 		border: 0;
 		overflow: hidden;
 		border-radius: 0.8rem;
 		background: var(--btn-regular-bg);
-		cursor: default;
+		cursor: pointer;
 	}
 
 	.music-cover {
@@ -303,8 +305,24 @@ onMount(() => {
 	}
 
 	.music-content {
+		width: 0;
 		min-width: 0;
+		max-width: 0;
+		padding: 0;
+		overflow: hidden;
+		opacity: 0;
+		pointer-events: none;
+		transform: translateX(0.75rem);
+		transition: opacity 160ms ease, transform 260ms ease;
+	}
+
+	.music-player.player-expanded .music-content {
+		width: auto;
+		max-width: none;
 		padding: 0.1rem 0.1rem 0.05rem 0;
+		opacity: 1;
+		pointer-events: auto;
+		transform: translateX(0);
 	}
 
 	.music-kicker {
@@ -401,20 +419,14 @@ onMount(() => {
 
 	@media (max-width: 767px) {
 		.music-player {
-			top: auto;
 			bottom: max(0.9rem, env(safe-area-inset-bottom));
 			right: 0.75rem;
-			z-index: 45;
 			grid-template-columns: 3.75rem 0fr;
-			gap: 0;
 			width: 4.25rem;
-			padding: 0.25rem;
 			border-radius: 1.1rem;
-			overflow: hidden;
-			transition: width 260ms ease, gap 260ms ease, padding 260ms ease, border-radius 260ms ease, border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease, transform 260ms ease;
 		}
 
-		.music-player.mobile-expanded {
+		.music-player.player-expanded {
 			grid-template-columns: 3.75rem minmax(0, 1fr);
 			gap: 0.65rem;
 			width: min(20rem, calc(100vw - 1.5rem));
@@ -427,27 +439,6 @@ onMount(() => {
 			height: 3.75rem;
 			border-radius: 0.9rem;
 			cursor: pointer;
-		}
-
-		.music-content {
-			width: 0;
-			min-width: 0;
-			max-width: 0;
-			padding: 0;
-			overflow: hidden;
-			opacity: 0;
-			pointer-events: none;
-			transform: translateX(0.75rem);
-			transition: opacity 160ms ease, transform 260ms ease;
-		}
-
-		.music-player.mobile-expanded .music-content {
-			width: auto;
-			max-width: none;
-			padding: 0.1rem 0.1rem 0.05rem 0;
-			opacity: 1;
-			pointer-events: auto;
-			transform: translateX(0);
 		}
 
 		/* The navigation drawer needs the entire upper-right area on phones. */

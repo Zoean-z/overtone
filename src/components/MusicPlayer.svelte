@@ -52,6 +52,10 @@ function togglePlayback() {
 	if (!audio || tracks.length === 0) return;
 
 	if (audio.paused) {
+		hasError = false;
+		if (audio.readyState === HTMLMediaElement.HAVE_NOTHING) {
+			audio.load();
+		}
 		audio.play().catch(() => {
 			hasError = true;
 			isPlaying = false;
@@ -149,6 +153,8 @@ onMount(() => {
 	});
 	audio.addEventListener("timeupdate", updateProgress);
 	audio.addEventListener("loadedmetadata", updateProgress);
+	audio.addEventListener("durationchange", updateProgress);
+	audio.addEventListener("canplay", updateProgress);
 	audio.addEventListener("ended", nextTrack);
 	audio.addEventListener("error", () => {
 		hasError = true;

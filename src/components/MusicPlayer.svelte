@@ -20,6 +20,7 @@ let sliderValue = 0;
 let pendingSeek: number | null = null;
 let isSeeking = false;
 let mobileMenuOpen = false;
+let mobileExpanded = false;
 
 $: currentTrack = tracks[currentIndex] || {
 	title: "暂无音乐",
@@ -117,6 +118,18 @@ function finishSeek(event: Event) {
 	updateProgress();
 }
 
+function toggleMobilePlayer() {
+	if (window.innerWidth < 768) {
+		mobileExpanded = !mobileExpanded;
+	}
+}
+
+function collapseMobilePlayer() {
+	if (window.innerWidth < 768 && mobileExpanded) {
+		mobileExpanded = false;
+	}
+}
+
 function formatTime(seconds: number) {
 	if (!Number.isFinite(seconds)) return "0:00";
 	const minutes = Math.floor(seconds / 60);
@@ -147,6 +160,7 @@ onMount(() => {
 	const menuPanel = document.getElementById("nav-menu-panel");
 	const syncMobileMenuState = () => {
 		mobileMenuOpen = !menuPanel?.classList.contains("float-panel-closed");
+		if (mobileMenuOpen) mobileExpanded = false;
 	};
 	const menuObserver = menuPanel
 		? new MutationObserver(syncMobileMenuState)
@@ -157,10 +171,12 @@ onMount(() => {
 		attributes: true,
 		attributeFilter: ["class"],
 	});
+	window.addEventListener("scroll", collapseMobilePlayer, { passive: true });
 	loadTrack(0);
 
 	return () => {
 		menuObserver?.disconnect();
+		window.removeEventListener("scroll", collapseMobilePlayer);
 		audio.pause();
 		audio.remove();
 	};
@@ -172,13 +188,20 @@ onMount(() => {
 	class="music-player card-base"
 	class:error={hasError}
 	class:mobile-menu-open={mobileMenuOpen}
+	class:mobile-expanded={mobileExpanded}
 	aria-label="音乐播放器"
 	title={hasError ? "音频加载失败，请检查文件路径" : currentTrack.title}
 >
-	<div class="music-cover-wrap">
+	<button
+		class="music-cover-wrap"
+		type="button"
+		aria-label={mobileExpanded ? "Collapse music player" : "Expand music player"}
+		aria-expanded={mobileExpanded}
+		onclick={toggleMobilePlayer}
+	>
 		<img class="music-cover" src={currentTrack.cover} alt={`${currentTrack.title} 封面`} />
 		<div class:playing={isPlaying} class="music-cover-glow"></div>
-	</div>
+	</button>
 
 	<div class="music-content">
 		<div class="music-kicker">NOW PLAYING</div>
@@ -252,9 +275,12 @@ onMount(() => {
 		position: relative;
 		width: 4.5rem;
 		height: 4.5rem;
+		padding: 0;
+		border: 0;
 		overflow: hidden;
 		border-radius: 0.8rem;
 		background: var(--btn-regular-bg);
+		cursor: default;
 	}
 
 	.music-cover {
@@ -375,16 +401,60 @@ onMount(() => {
 
 	@media (max-width: 767px) {
 		.music-player {
-			top: 4.5rem;
+			top: auto;
+			bottom: max(0.9rem, env(safe-area-inset-bottom));
 			right: 0.75rem;
+			z-index: 45;
+			grid-template-columns: 3.75rem 0fr;
+			gap: 0;
+			width: 4.25rem;
+			padding: 0.25rem;
+			border-radius: 1.1rem;
+			overflow: hidden;
+			transition: width 260ms ease, gap 260ms ease, padding 260ms ease, border-radius 260ms ease, border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease, transform 260ms ease;
+		}
+
+		.music-player.mobile-expanded {
+			grid-template-columns: 3.75rem minmax(0, 1fr);
+			gap: 0.65rem;
 			width: min(20rem, calc(100vw - 1.5rem));
+			padding: 0.65rem;
+			border-radius: var(--radius-large);
+		}
+
+		.music-cover-wrap {
+			width: 3.75rem;
+			height: 3.75rem;
+			border-radius: 0.9rem;
+			cursor: pointer;
+		}
+
+		.music-content {
+			width: 0;
+			min-width: 0;
+			max-width: 0;
+			padding: 0;
+			overflow: hidden;
+			opacity: 0;
+			pointer-events: none;
+			transform: translateX(0.75rem);
+			transition: opacity 160ms ease, transform 260ms ease;
+		}
+
+		.music-player.mobile-expanded .music-content {
+			width: auto;
+			max-width: none;
+			padding: 0.1rem 0.1rem 0.05rem 0;
+			opacity: 1;
+			pointer-events: auto;
+			transform: translateX(0);
 		}
 
 		/* The navigation drawer needs the entire upper-right area on phones. */
 		.music-player.mobile-menu-open {
 			pointer-events: none;
 			opacity: 0;
-			transform: translateY(-1rem);
+			transform: translateY(1rem);
 		}
 	}
 </style>

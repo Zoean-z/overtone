@@ -25,7 +25,7 @@ import { parseDirectiveNode } from "./src/plugins/remark-directive-rehype.js";
 import { remarkExcerpt } from "./src/plugins/remark-excerpt.js";
 import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
 
-const defaultSiteUrl = "https://overtone-seven.vercel.app/";
+const defaultSiteUrl = "https://zoean.xyz/";
 const siteUrl = (process.env.PUBLIC_SITE_URL || defaultSiteUrl).replace(
 	/\/?$/,
 	"/",

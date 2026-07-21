@@ -19,6 +19,7 @@ let duration = 0;
 let sliderValue = 0;
 let pendingSeek: number | null = null;
 let isSeeking = false;
+let mobileMenuOpen = false;
 
 $: currentTrack = tracks[currentIndex] || {
 	title: "暂无音乐",
@@ -142,9 +143,24 @@ onMount(() => {
 		hasError = true;
 		isPlaying = false;
 	});
+
+	const menuPanel = document.getElementById("nav-menu-panel");
+	const syncMobileMenuState = () => {
+		mobileMenuOpen = !menuPanel?.classList.contains("float-panel-closed");
+	};
+	const menuObserver = menuPanel
+		? new MutationObserver(syncMobileMenuState)
+		: undefined;
+
+	syncMobileMenuState();
+	menuObserver?.observe(menuPanel, {
+		attributes: true,
+		attributeFilter: ["class"],
+	});
 	loadTrack(0);
 
 	return () => {
+		menuObserver?.disconnect();
 		audio.pause();
 		audio.remove();
 	};
@@ -155,6 +171,7 @@ onMount(() => {
 	id="music-player"
 	class="music-player card-base"
 	class:error={hasError}
+	class:mobile-menu-open={mobileMenuOpen}
 	aria-label="音乐播放器"
 	title={hasError ? "音频加载失败，请检查文件路径" : currentTrack.title}
 >
@@ -361,6 +378,13 @@ onMount(() => {
 			top: 4.5rem;
 			right: 0.75rem;
 			width: min(20rem, calc(100vw - 1.5rem));
+		}
+
+		/* The navigation drawer needs the entire upper-right area on phones. */
+		.music-player.mobile-menu-open {
+			pointer-events: none;
+			opacity: 0;
+			transform: translateY(-1rem);
 		}
 	}
 </style>

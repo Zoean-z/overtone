@@ -177,13 +177,14 @@ function parseFrontmatter(content) {
 
 function serializePost(post) {
 	const tagsText = `[${dedupeTagList(post.tags).join(", ")}]`;
+	const yamlText = (value) => String(value ?? "") || '""';
 	return `---\n`
 		+ `title: ${post.title}\n`
 		+ `published: ${post.published}\n`
-		+ `description: ${post.description}\n`
-		+ `image: ${post.image || ""}\n`
+		+ `description: ${yamlText(post.description)}\n`
+		+ `image: ${yamlText(post.image)}\n`
 		+ `tags: ${tagsText}\n`
-		+ `category: ${post.category || ""}\n`
+		+ `category: ${yamlText(post.category)}\n`
 		+ `draft: ${post.draft ? "true" : "false"}\n`
 		+ `---\n\n`
 		+ `${post.body || ""}\n`;

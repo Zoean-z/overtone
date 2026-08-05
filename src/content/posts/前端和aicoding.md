@@ -1,7 +1,7 @@
 ---
 title: 前端，国企和aicoding
 published: 2026-08-05
-description: 
+description: ""
 image: /uploads/posts/前端和aicoding.jpg
 tags: [网站]
 category: 随笔
@@ -21,5 +21,4 @@ draft: false
 > 以及做了个模仿sb6657的网站，不过也不会有什么人用就是了，视频也没流量，唉唉
 
 ### 希望这周五能看见dsv4pro正式版发布^ ^
-
 

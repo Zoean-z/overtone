@@ -17,7 +17,7 @@ const tagRegistryPath = path.join(rootDir, "src", "data", "tag-registry.json");
 const aboutPath = path.join(rootDir, "src", "content", "spec", "about.md");
 
 const host = "127.0.0.1";
-const port = 4312;
+const port = Number.parseInt(process.env.ADMIN_PORT || "4312", 10);
 
 const markdown = new MarkdownIt({
 	html: false,

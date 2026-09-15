@@ -107,6 +107,8 @@ const jsonLd = {
             {entry.data.image &&
                 <ImageWrapper
                     id="post-cover"
+                    loading="eager"
+                    sizes="(min-width: 1280px) 900px, (min-width: 1024px) calc(100vw - 360px), calc(100vw - 48px)"
                     src={entry.data.image}
                     basePath={path.join("content/posts/", getDir(entry.id))}
                     class="mb-8 rounded-xl banner-container onload-animation"

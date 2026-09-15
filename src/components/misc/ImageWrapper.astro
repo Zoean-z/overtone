@@ -8,6 +8,10 @@ interface Props {
 	alt?: string;
 	position?: string;
 	basePath?: string;
+	sizes?: string;
+	widths?: number[];
+	loading?: "eager" | "lazy";
+	fetchpriority?: "high" | "auto" | "low";
 }
 
 import { Image } from "astro:assets";
@@ -15,6 +19,7 @@ import { url } from "../../utils/url-utils";
 
 const { id, src, alt, position = "center", basePath = "/" } = Astro.props;
 const className = Astro.props.class;
+const { sizes = "(max-width: 1023px) 100vw, 900px", widths = [320, 640, 960, 1440, 1920], loading = "lazy", fetchpriority = "auto" } = Astro.props;
 
 const isLocal = !(
 	src.startsWith("/") ||
@@ -26,8 +31,14 @@ const isPublic = src.startsWith("/");
 
 // TODO temporary workaround for images dynamic import
 // https://github.com/withastro/astro/issues/3373
-// biome-ignore lint/suspicious/noImplicitAnyLet: <check later>
-let img;
+let img: ImageMetadata | undefined;
+// Import public uploads as metadata so Astro can transform them at build time.
+// Original URLs remain available for the admin and full-resolution downloads.
+if (isPublic) {
+	const uploads = import.meta.glob<{ default: ImageMetadata }>("../../../public/**/*.{png,jpg,jpeg,webp,avif}");
+	const file = uploads[`../../../public${src}`];
+	if (file) img = (await file()).default;
+}
 if (isLocal) {
 	const files = import.meta.glob<ImageMetadata>("../../**", {
 		import: "default",
@@ -41,14 +52,16 @@ if (isLocal) {
 			`\n[ERROR] Image file not found: ${normalizedPath.replace("../../", "src/")}`,
 		);
 	}
-	img = await file();
+	if (file) img = await file();
 }
+
+const responsiveWidths = img ? [...new Set([...widths.filter((width) => width < img.width), Math.min(img.width, widths[widths.length - 1])])] : [];
 
 const imageClass = "w-full h-full object-cover";
 const imageStyle = `object-position: ${position}`;
 ---
 <div id={id} class:list={[className, 'overflow-hidden relative']}>
     <div class="transition absolute inset-0 dark:bg-black/10 bg-opacity-50 pointer-events-none"></div>
-    {isLocal && img && <Image src={img} alt={alt || ""} class={imageClass} style={imageStyle}/>}
-    {!isLocal && <img src={isPublic ? url(src) : src} alt={alt || ""} class={imageClass} style={imageStyle}/>}
+    {img && <Image src={img} widths={responsiveWidths} width={responsiveWidths[responsiveWidths.length - 1]} sizes={sizes} format="webp" quality={82} loading={loading} fetchpriority={fetchpriority} decoding="async" data-original-src={isPublic ? url(src) : img.src} data-original-width={img.width} data-original-height={img.height} alt={alt || ""} class={imageClass} style={imageStyle}/>}
+    {!img && <img src={isPublic ? url(src) : src} loading={loading} fetchpriority={fetchpriority} decoding="async" alt={alt || ""} class={imageClass} style={imageStyle}/>}
 </div>

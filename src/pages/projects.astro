@@ -2,6 +2,7 @@
 export const prerender = true;
 
 import LikeButton from "@components/feedback/LikeButton.astro";
+import ImageWrapper from "@components/misc/ImageWrapper.astro";
 import { Icon } from "astro-icon/components";
 import { projects } from "../data/projects";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
@@ -81,9 +82,11 @@ const getProjectLikeId = (title: string) =>
 					]}
 				>
 					{project.cover && (
-						<img
+						<ImageWrapper
 							src={project.cover}
 							alt={`${project.title} cover`}
+							sizes="(min-width: 768px) 280px, calc(100vw - 32px)"
+							widths={[320, 560, 840, 1200]}
 							class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
 						/>
 					)}

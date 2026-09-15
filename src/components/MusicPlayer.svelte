@@ -203,7 +203,7 @@ onMount(() => {
 		aria-expanded={playerExpanded}
 		onclick={togglePlayer}
 	>
-		<img class="music-cover" src={currentTrack.cover} alt={`${currentTrack.title} 封面`} />
+		<img class="music-cover" src={currentTrack.cover} decoding="async" width="160" height="160" alt={`${currentTrack.title} 封面`} />
 		<div class:playing={isPlaying} class="music-cover-glow"></div>
 	</button>
 

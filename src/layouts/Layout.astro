@@ -18,9 +18,19 @@ import {
 } from "../constants/constants";
 import { defaultFavicons } from "../constants/icon";
 import musicTracks from "../data/music.json";
+import { getImage } from "astro:assets";
 import type { Favicon } from "../types/config";
 import { pathsEqual, url } from "../utils/url-utils";
 import "katex/dist/katex.css";
+
+const musicCovers = import.meta.glob<{ default: ImageMetadata }>("../../public/uploads/music/*.{jpg,jpeg,png,webp}");
+const optimizedTracks = await Promise.all(musicTracks.map(async (track) => {
+	const load = musicCovers[`../../public${track.cover}`];
+	if (!load) return track;
+	const { default: source } = await load();
+	const image = await getImage({ src: source, width: Math.min(160, source.width), format: "webp", quality: 82 });
+	return { ...track, cover: image.src };
+}));
 
 interface Props {
 	title?: string;
@@ -154,7 +164,7 @@ const bannerOffset =
 		  data-overlayscrollbars-initialize
 	>
 		<ConfigCarrier></ConfigCarrier>
-		<MusicPlayer client:only="svelte" tracks={musicTracks} />
+		<MusicPlayer client:only="svelte" tracks={optimizedTracks} />
 		<slot />
 
 		<!-- increase the page height during page transition to prevent the scrolling animation from jumping -->
@@ -531,12 +541,12 @@ function createPhotoSwipe() {
 
 	lightbox.addFilter("domItemData", (itemData, element) => {
 		if (element instanceof HTMLImageElement) {
-			itemData.src = element.src
+			itemData.src = element.dataset.originalSrc || element.src
 
-			itemData.w = Number(element.naturalWidth || window.innerWidth)
-			itemData.h = Number(element.naturalHeight || window.innerHeight)
+			itemData.w = Number(element.dataset.originalWidth || element.naturalWidth || window.innerWidth)
+			itemData.h = Number(element.dataset.originalHeight || element.naturalHeight || window.innerHeight)
 
-			itemData.msrc = element.src
+			itemData.msrc = element.currentSrc || element.src
 		}
 
 		return itemData

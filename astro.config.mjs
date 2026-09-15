@@ -5,7 +5,7 @@ import vercel from "@astrojs/vercel";
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
 import swup from "@swup/astro";
-import { defineConfig, passthroughImageService } from "astro/config";
+import { defineConfig, sharpImageService } from "astro/config";
 import expressiveCode from "astro-expressive-code";
 import icon from "astro-icon";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
@@ -38,7 +38,7 @@ export default defineConfig({
 	base: "/",
 	output: "server",
 	image: {
-		service: passthroughImageService(),
+		service: sharpImageService(),
 	},
 	trailingSlash: "always",
 	integrations: [
